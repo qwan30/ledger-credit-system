@@ -1,0 +1,7 @@
+interface:
+  display_name: "Backend Patterns"
+  short_description: "API design, database, and server-side patterns"
+  brand_color: "#F59E0B"
+  default_prompt: "Use $backend-patterns to plan a TypeScript backend change with safe data and write patterns."
+policy:
+  allow_implicit_invocation: true

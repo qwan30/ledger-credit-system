@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "project": "ledger-credit-system",
+  "notes": [
+    "Upstream skills are vendored into .agents/skills and normalized for Codex project-local usage.",
+    "Root AGENTS.md and .codex/config.toml are custom project files informed by ECC conventions."
+  ],
+  "artifacts": [
+    {
+      "type": "skill",
+      "name": "api-design",
+      "repo": "affaan-m/everything-claude-code",
+      "ref": "fdea3085a76c842edea49a72ea695ccc7ff537ed",
+      "upstream_path": ".agents/skills/api-design",
+      "normalized_for_codex": true
+    },
+    {
+      "type": "skill",
+      "name": "backend-patterns",
+      "repo": "affaan-m/everything-claude-code",
+      "ref": "fdea3085a76c842edea49a72ea695ccc7ff537ed",
+      "upstream_path": ".agents/skills/backend-patterns",
+      "normalized_for_codex": true
+    },
+    {
+      "type": "skill",
+      "name": "coding-standards",
+      "repo": "affaan-m/everything-claude-code",
+      "ref": "fdea3085a76c842edea49a72ea695ccc7ff537ed",
+      "upstream_path": ".agents/skills/coding-standards",
+      "normalized_for_codex": true
+    },
+    {
+      "type": "skill",
+      "name": "security-review",
+      "repo": "affaan-m/everything-claude-code",
+      "ref": "fdea3085a76c842edea49a72ea695ccc7ff537ed",
+      "upstream_path": ".agents/skills/security-review",
+      "normalized_for_codex": true
+    },
+    {
+      "type": "skill",
+      "name": "tdd-workflow",
+      "repo": "affaan-m/everything-claude-code",
+      "ref": "fdea3085a76c842edea49a72ea695ccc7ff537ed",
+      "upstream_path": ".agents/skills/tdd-workflow",
+      "normalized_for_codex": true
+    },
+    {
+      "type": "skill",
+      "name": "verification-loop",
+      "repo": "affaan-m/everything-claude-code",
+      "ref": "fdea3085a76c842edea49a72ea695ccc7ff537ed",
+      "upstream_path": ".agents/skills/verification-loop",
+      "normalized_for_codex": true
+    },
+    {
+      "type": "skill",
+      "name": "prompt-leverage",
+      "repo": "hoangnb24/skills",
+      "ref": "be8dc32dfa2acbd3148c63839950237e9321aac5",
+      "upstream_path": ".agents/skills/prompt-leverage",
+      "normalized_for_codex": true
+    },
+    {
+      "type": "skill",
+      "name": "ui-ux-pro-max",
+      "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "ref": "07f4ef3ac2568c25a3b0c8ef5165a86abc3e56e4",
+      "upstream_path": ".claude/skills/ui-ux-pro-max and src/ui-ux-pro-max/{data,scripts}",
+      "normalized_for_codex": true
+    },
+    {
+      "type": "skill",
+      "name": "web-design-guidelines",
+      "repo": "vercel-labs/agent-skills",
+      "ref": "5847a7c7e79bab3e400cf47800b83449d7aea2d4",
+      "upstream_path": "skills/web-design-guidelines",
+      "normalized_for_codex": true
+    }
+  ]
+}

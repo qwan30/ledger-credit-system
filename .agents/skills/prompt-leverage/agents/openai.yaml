@@ -1,0 +1,6 @@
+interface:
+  display_name: "Prompt Leverage"
+  short_description: "Upgrade raw prompts for execution"
+  default_prompt: "Use $prompt-leverage to upgrade this raw prompt into an execution-ready instruction set."
+policy:
+  allow_implicit_invocation: false

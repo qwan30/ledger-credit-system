@@ -1,0 +1,7 @@
+interface:
+  display_name: "Coding Standards"
+  short_description: "Universal coding standards and best practices"
+  brand_color: "#3B82F6"
+  default_prompt: "Use $coding-standards to review this TypeScript backend change for clarity and maintainability."
+policy:
+  allow_implicit_invocation: true

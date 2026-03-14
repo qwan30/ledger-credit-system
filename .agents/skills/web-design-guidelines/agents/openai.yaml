@@ -1,0 +1,6 @@
+interface:
+  display_name: "Web Design Guidelines"
+  short_description: "Audit web UI files for accessibility and UX"
+  default_prompt: "Use $web-design-guidelines to audit a web UI file or admin screen for UX issues."
+policy:
+  allow_implicit_invocation: false

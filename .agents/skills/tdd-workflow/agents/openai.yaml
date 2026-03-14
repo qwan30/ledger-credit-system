@@ -1,0 +1,7 @@
+interface:
+  display_name: "TDD Workflow"
+  short_description: "Test-driven development with 80%+ coverage"
+  brand_color: "#22C55E"
+  default_prompt: "Use $tdd-workflow to define tests first for this backend feature or bug fix."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: "UI UX Pro Max"
+  short_description: "Design guidance for dashboards and frontend UI"
+  default_prompt: "Use $ui-ux-pro-max to review or plan a dashboard or admin UI for this project."
+policy:
+  allow_implicit_invocation: false
