@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: ledger_credit_system
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ledger_credit_system"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ledger_credit_system?schema=public
+      JWT_SECRET: ci-secret-placeholder
+      SUPPORTED_CURRENCIES: USD
+      BUSINESS_TIMEZONE: UTC
+      CLOSE_WINDOW_CRON: 0 0 * * *
+      BATCH_SHARD_SIZE: 500
+      SCORE_APPROVE_THRESHOLD: 700
+      SCORE_REJECT_THRESHOLD: 550
+      RATE_LIMIT_MAX: 100
+      RATE_LIMIT_WINDOW_MS: 60000
+      EXTERNAL_SIMULATOR_SETTLEMENT_DELAY_MS: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run prisma:generate
+      - run: npx prisma migrate deploy
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build

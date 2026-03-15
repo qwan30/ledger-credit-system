@@ -1,0 +1,370 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountStatus {
+  ACTIVE
+  BLOCKED
+  CLOSED
+}
+
+enum LedgerAccountCategory {
+  CUSTOMER
+  CASH
+  CLEARING
+  EXTERNAL_SETTLEMENT
+  INTEREST_REVENUE
+  INTERNAL_SUSPENSE
+}
+
+enum NormalBalanceDirection {
+  DEBIT
+  CREDIT
+}
+
+enum PostingDirection {
+  DEBIT
+  CREDIT
+}
+
+enum TransferType {
+  INTERNAL
+  INTERBANK
+}
+
+enum TransferStatus {
+  RECEIVED
+  VALIDATED
+  PENDING_LEDGER
+  PENDING_EXTERNAL
+  SETTLED
+  FAILED
+  COMPENSATED
+  CANCELLED
+}
+
+enum CreditAssessmentStatus {
+  REQUESTED
+  DATA_COLLECTED
+  SCORED
+  APPROVED
+  REJECTED
+  FAILED
+}
+
+enum BatchRunStatus {
+  SCHEDULED
+  RUNNING
+  PARTIALLY_FAILED
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum BatchRunItemStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum ActorType {
+  CUSTOMER
+  OPS
+  ANALYST
+  AUDITOR
+  ADMIN
+  SYSTEM
+  API_CLIENT
+}
+
+enum ExternalTransferEventType {
+  SUBMITTED
+  ACKNOWLEDGED
+  SETTLED
+  FAILED
+  COMPENSATED
+}
+
+enum IdempotencyStatus {
+  IN_PROGRESS
+  SUCCEEDED
+  FAILED
+}
+
+model Customer {
+  id                     String                  @id @default(uuid()) @db.Uuid
+  externalRef            String?                 @unique
+  status                 String
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  accounts               Account[]
+  creditProfileSnapshots CreditProfileSnapshot[]
+  creditAssessments      CreditAssessment[]
+
+  @@map("customer")
+}
+
+model Account {
+  id                   String                      @id @default(uuid()) @db.Uuid
+  customerId           String                      @db.Uuid
+  type                 String
+  currency             String
+  status               AccountStatus
+  createdAt            DateTime                    @default(now())
+  updatedAt            DateTime                    @updatedAt
+  customer             Customer                    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  ledgerAccount        LedgerAccount?
+  balanceProjection    BalanceProjection?
+  statementLines       AccountStatementProjection[]
+  sourceTransfers      TransferRequest[]           @relation("transfer_source_account")
+  destinationTransfers TransferRequest[]           @relation("transfer_destination_account")
+
+  @@index([customerId])
+  @@map("account")
+}
+
+model LedgerAccount {
+  id                     String                 @id @default(uuid()) @db.Uuid
+  accountId              String?                @unique @db.Uuid
+  category               LedgerAccountCategory
+  currency               String
+  normalBalanceDirection NormalBalanceDirection
+  createdAt              DateTime               @default(now())
+  account                Account?               @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  postings               Posting[]
+
+  @@index([category, currency])
+  @@map("ledger_account")
+}
+
+model JournalEntry {
+  id                  String           @id @default(uuid()) @db.Uuid
+  transferRequestId   String?          @db.Uuid
+  batchRunId          String?          @db.Uuid
+  effectiveAt         DateTime
+  sourceOperationType String
+  correlationId       String?
+  idempotencyKey      String?
+  description         String?
+  createdAt           DateTime         @default(now())
+  postings            Posting[]
+  statementLines      AccountStatementProjection[]
+  transferRequest     TransferRequest? @relation(fields: [transferRequestId], references: [id], onDelete: Restrict)
+  batchRun            BatchRun?        @relation(fields: [batchRunId], references: [id], onDelete: Restrict)
+
+  @@index([transferRequestId])
+  @@index([batchRunId])
+  @@index([correlationId])
+  @@map("journal_entry")
+}
+
+model Posting {
+  id             String                     @id @default(uuid()) @db.Uuid
+  journalEntryId String                     @db.Uuid
+  ledgerAccountId String                    @db.Uuid
+  amountMinor    BigInt
+  currency       String
+  direction      PostingDirection
+  createdAt      DateTime                   @default(now())
+  journalEntry   JournalEntry               @relation(fields: [journalEntryId], references: [id], onDelete: Restrict)
+  ledgerAccount  LedgerAccount              @relation(fields: [ledgerAccountId], references: [id], onDelete: Restrict)
+  statementLines AccountStatementProjection[]
+
+  @@index([journalEntryId])
+  @@index([ledgerAccountId])
+  @@map("posting")
+}
+
+model TransferRequest {
+  id                               String                  @id @default(uuid()) @db.Uuid
+  transferType                     TransferType
+  status                           TransferStatus
+  sourceAccountId                  String                  @db.Uuid
+  destinationAccountId             String?                 @db.Uuid
+  destinationExternalBankCode      String?
+  destinationExternalAccountNumber String?
+  destinationExternalAccountName   String?
+  amountMinor                      BigInt
+  currency                         String
+  idempotencyKey                   String
+  requestHash                      String
+  correlationId                    String?
+  externalReference                String?
+  failureReason                    String?
+  createdAt                        DateTime                @default(now())
+  updatedAt                        DateTime                @updatedAt
+  settledAt                        DateTime?
+  sourceAccount                    Account                 @relation("transfer_source_account", fields: [sourceAccountId], references: [id], onDelete: Restrict)
+  destinationAccount               Account?                @relation("transfer_destination_account", fields: [destinationAccountId], references: [id], onDelete: Restrict)
+  journalEntries                   JournalEntry[]
+  externalEvents                   ExternalTransferEvent[]
+
+  @@unique([idempotencyKey])
+  @@index([sourceAccountId])
+  @@index([destinationAccountId])
+  @@index([status])
+  @@index([correlationId])
+  @@map("transfer_request")
+}
+
+model IdempotencyRecord {
+  id                 String             @id @default(uuid()) @db.Uuid
+  key                String
+  operationType      String
+  requestHash        String
+  status             IdempotencyStatus
+  responseStatusCode Int?
+  responseBody       Json?
+  resourceType       String?
+  resourceId         String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@unique([operationType, key])
+  @@index([resourceType, resourceId])
+  @@map("idempotency_record")
+}
+
+model CreditProfileSnapshot {
+  id                   String             @id @default(uuid()) @db.Uuid
+  customerId           String             @db.Uuid
+  paymentHistoryPoints Int
+  averageBalanceMinor  BigInt
+  transactionFrequency Int
+  snapshotVersion      String
+  snapshotData         Json
+  createdAt            DateTime           @default(now())
+  customer             Customer           @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  assessments          CreditAssessment[]
+
+  @@index([customerId])
+  @@map("credit_profile_snapshot")
+}
+
+model CreditAssessment {
+  id                      String                 @id @default(uuid()) @db.Uuid
+  customerId              String                 @db.Uuid
+  creditProfileSnapshotId String                 @db.Uuid
+  status                  CreditAssessmentStatus
+  score                   Int?
+  rationaleSummary        String?
+  policyVersion           String
+  requestedBy             String
+  approvedThreshold       Int
+  rejectedThreshold       Int
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  customer                Customer               @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  creditProfileSnapshot   CreditProfileSnapshot  @relation(fields: [creditProfileSnapshotId], references: [id], onDelete: Restrict)
+
+  @@index([customerId])
+  @@index([status])
+  @@map("credit_assessment")
+}
+
+model BatchRun {
+  id             String         @id @default(uuid()) @db.Uuid
+  batchType      String
+  status         BatchRunStatus
+  scheduledFor   DateTime
+  startedAt      DateTime?
+  completedAt    DateTime?
+  processedCount Int            @default(0)
+  successCount   Int            @default(0)
+  failureCount   Int            @default(0)
+  failureSummary Json?
+  correlationId  String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  items          BatchRunItem[]
+  journalEntries JournalEntry[]
+
+  @@index([batchType, scheduledFor])
+  @@index([status])
+  @@map("batch_run")
+}
+
+model BatchRunItem {
+  id           String             @id @default(uuid()) @db.Uuid
+  batchRunId   String             @db.Uuid
+  resourceType String
+  resourceId   String
+  shardKey     String
+  status       BatchRunItemStatus
+  attemptCount Int                @default(0)
+  lastError    String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  batchRun     BatchRun           @relation(fields: [batchRunId], references: [id], onDelete: Restrict)
+
+  @@unique([batchRunId, resourceType, resourceId])
+  @@index([batchRunId, status])
+  @@map("batch_run_item")
+}
+
+model AuditEvent {
+  id             String    @id @default(uuid()) @db.Uuid
+  actorType      ActorType
+  actorId        String?
+  actionType     String
+  resourceType   String
+  resourceId     String
+  correlationId  String?
+  idempotencyKey String?
+  metadata       Json
+  occurredAt     DateTime  @default(now())
+
+  @@index([resourceType, resourceId])
+  @@index([correlationId])
+  @@index([actorType, actorId])
+  @@map("audit_event")
+}
+
+model ExternalTransferEvent {
+  id                String                    @id @default(uuid()) @db.Uuid
+  transferRequestId String                    @db.Uuid
+  eventType         ExternalTransferEventType
+  payload           Json
+  createdAt         DateTime                  @default(now())
+  processedAt       DateTime?
+  transferRequest   TransferRequest           @relation(fields: [transferRequestId], references: [id], onDelete: Restrict)
+
+  @@index([transferRequestId, eventType])
+  @@map("external_transfer_event")
+}
+
+model BalanceProjection {
+  accountId      String   @id @db.Uuid
+  currency       String
+  currentMinor   BigInt
+  journalEntryId String?  @db.Uuid
+  updatedAt      DateTime @updatedAt
+  account        Account  @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@map("balance_projection")
+}
+
+model AccountStatementProjection {
+  id                 String           @id @default(uuid()) @db.Uuid
+  accountId          String           @db.Uuid
+  journalEntryId     String           @db.Uuid
+  postingId          String           @unique @db.Uuid
+  effectiveAt        DateTime
+  amountMinor        BigInt
+  currency           String
+  direction          PostingDirection
+  runningBalanceMinor BigInt
+  createdAt          DateTime         @default(now())
+  account            Account          @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  journalEntry       JournalEntry     @relation(fields: [journalEntryId], references: [id], onDelete: Restrict)
+  posting            Posting          @relation(fields: [postingId], references: [id], onDelete: Restrict)
+
+  @@index([accountId, effectiveAt])
+  @@map("account_statement_projection")
+}
