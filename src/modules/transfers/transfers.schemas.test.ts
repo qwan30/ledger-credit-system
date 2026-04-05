@@ -38,4 +38,30 @@ describe("createTransferSchema", () => {
       })
     ).toThrow();
   });
+
+  it("accepts an external transfer provider and normalizes it", () => {
+    expect(
+      createTransferSchema.parse({
+        sourceAccountId: "11111111-1111-1111-1111-111111111111",
+        destination: {
+          type: "EXTERNAL_BANK",
+          provider: " MOCK-BANK ",
+          bankCode: "BANK01",
+          accountNumber: "12345678",
+          accountName: "Receiver"
+        },
+        amount: {
+          currency: "usd",
+          minorUnits: 2500
+        }
+      })
+    ).toMatchObject({
+      destination: {
+        provider: "mock-bank"
+      },
+      amount: {
+        currency: "USD"
+      }
+    });
+  });
 });

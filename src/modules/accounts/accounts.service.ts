@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 
 import { assertCustomerOwnsResource } from "@/common/auth/authorization";
 import { AppException } from "@/common/errors/app-exception";
@@ -10,8 +10,8 @@ import { AuditService } from "@/modules/audit/audit.service";
 @Injectable()
 export class AccountsService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly auditService: AuditService
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(AuditService) private readonly auditService: AuditService
   ) {}
 
   async getBalance(accountId: string, context: RequestContext) {

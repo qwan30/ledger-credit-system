@@ -52,6 +52,7 @@ enum CreditAssessmentStatus {
   REQUESTED
   DATA_COLLECTED
   SCORED
+  UNDER_REVIEW
   APPROVED
   REJECTED
   FAILED
@@ -97,6 +98,21 @@ enum IdempotencyStatus {
   FAILED
 }
 
+enum AuthPrincipalStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum AuthCredentialType {
+  PASSWORD
+}
+
+enum AuthSessionStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+}
+
 model Customer {
   id                     String                  @id @default(uuid()) @db.Uuid
   externalRef            String?                 @unique
@@ -104,6 +120,7 @@ model Customer {
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
   accounts               Account[]
+  authPrincipals         AuthPrincipal[]
   creditProfileSnapshots CreditProfileSnapshot[]
   creditAssessments      CreditAssessment[]
 
@@ -111,19 +128,19 @@ model Customer {
 }
 
 model Account {
-  id                   String                      @id @default(uuid()) @db.Uuid
-  customerId           String                      @db.Uuid
+  id                   String                       @id @default(uuid()) @db.Uuid
+  customerId           String                       @db.Uuid
   type                 String
   currency             String
   status               AccountStatus
-  createdAt            DateTime                    @default(now())
-  updatedAt            DateTime                    @updatedAt
-  customer             Customer                    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  createdAt            DateTime                     @default(now())
+  updatedAt            DateTime                     @updatedAt
+  customer             Customer                     @relation(fields: [customerId], references: [id], onDelete: Restrict)
   ledgerAccount        LedgerAccount?
   balanceProjection    BalanceProjection?
   statementLines       AccountStatementProjection[]
-  sourceTransfers      TransferRequest[]           @relation("transfer_source_account")
-  destinationTransfers TransferRequest[]           @relation("transfer_destination_account")
+  sourceTransfers      TransferRequest[]            @relation("transfer_source_account")
+  destinationTransfers TransferRequest[]            @relation("transfer_destination_account")
 
   @@index([customerId])
   @@map("account")
@@ -144,19 +161,19 @@ model LedgerAccount {
 }
 
 model JournalEntry {
-  id                  String           @id @default(uuid()) @db.Uuid
-  transferRequestId   String?          @db.Uuid
-  batchRunId          String?          @db.Uuid
+  id                  String                       @id @default(uuid()) @db.Uuid
+  transferRequestId   String?                      @db.Uuid
+  batchRunId          String?                      @db.Uuid
   effectiveAt         DateTime
   sourceOperationType String
   correlationId       String?
   idempotencyKey      String?
   description         String?
-  createdAt           DateTime         @default(now())
+  createdAt           DateTime                     @default(now())
   postings            Posting[]
   statementLines      AccountStatementProjection[]
-  transferRequest     TransferRequest? @relation(fields: [transferRequestId], references: [id], onDelete: Restrict)
-  batchRun            BatchRun?        @relation(fields: [batchRunId], references: [id], onDelete: Restrict)
+  transferRequest     TransferRequest?             @relation(fields: [transferRequestId], references: [id], onDelete: Restrict)
+  batchRun            BatchRun?                    @relation(fields: [batchRunId], references: [id], onDelete: Restrict)
 
   @@index([transferRequestId])
   @@index([batchRunId])
@@ -165,16 +182,16 @@ model JournalEntry {
 }
 
 model Posting {
-  id             String                     @id @default(uuid()) @db.Uuid
-  journalEntryId String                     @db.Uuid
-  ledgerAccountId String                    @db.Uuid
-  amountMinor    BigInt
-  currency       String
-  direction      PostingDirection
-  createdAt      DateTime                   @default(now())
-  journalEntry   JournalEntry               @relation(fields: [journalEntryId], references: [id], onDelete: Restrict)
-  ledgerAccount  LedgerAccount              @relation(fields: [ledgerAccountId], references: [id], onDelete: Restrict)
-  statementLines AccountStatementProjection[]
+  id              String                       @id @default(uuid()) @db.Uuid
+  journalEntryId  String                       @db.Uuid
+  ledgerAccountId String                       @db.Uuid
+  amountMinor     BigInt
+  currency        String
+  direction       PostingDirection
+  createdAt       DateTime                     @default(now())
+  journalEntry    JournalEntry                 @relation(fields: [journalEntryId], references: [id], onDelete: Restrict)
+  ledgerAccount   LedgerAccount                @relation(fields: [ledgerAccountId], references: [id], onDelete: Restrict)
+  statementLines  AccountStatementProjection[]
 
   @@index([journalEntryId])
   @@index([ledgerAccountId])
@@ -195,6 +212,7 @@ model TransferRequest {
   idempotencyKey                   String
   requestHash                      String
   correlationId                    String?
+  externalRailProvider             String?                 @default("simulator")
   externalReference                String?
   failureReason                    String?
   createdAt                        DateTime                @default(now())
@@ -210,11 +228,12 @@ model TransferRequest {
   @@index([destinationAccountId])
   @@index([status])
   @@index([correlationId])
+  @@index([externalRailProvider, externalReference])
   @@map("transfer_request")
 }
 
 model IdempotencyRecord {
-  id                 String             @id @default(uuid()) @db.Uuid
+  id                 String            @id @default(uuid()) @db.Uuid
   key                String
   operationType      String
   requestHash        String
@@ -223,12 +242,103 @@ model IdempotencyRecord {
   responseBody       Json?
   resourceType       String?
   resourceId         String?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
   @@unique([operationType, key])
   @@index([resourceType, resourceId])
   @@map("idempotency_record")
+}
+
+model AuthPrincipal {
+  id                 String              @id @default(uuid()) @db.Uuid
+  loginId            String?             @unique
+  actorType          ActorType
+  actorId            String
+  customerId         String?             @unique @db.Uuid
+  status             AuthPrincipalStatus @default(ACTIVE)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  customer           Customer?           @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  credentials        AuthCredential[]
+  sessions           AuthSession[]
+  externalIdentities ExternalIdentity[]
+  roleBindings       RoleBinding[]
+
+  @@index([actorType, actorId])
+  @@map("auth_principal")
+}
+
+model AuthCredential {
+  id          String             @id @default(uuid()) @db.Uuid
+  principalId String             @db.Uuid
+  type        AuthCredentialType
+  secretHash  String
+  createdAt   DateTime           @default(now())
+  rotatedAt   DateTime?
+  principal   AuthPrincipal      @relation(fields: [principalId], references: [id], onDelete: Restrict)
+
+  @@index([principalId, type])
+  @@map("auth_credential")
+}
+
+model AuthSession {
+  id               String            @id @default(uuid()) @db.Uuid
+  principalId      String            @db.Uuid
+  audience         String
+  issuer           String
+  status           AuthSessionStatus @default(ACTIVE)
+  refreshExpiresAt DateTime
+  revokedAt        DateTime?
+  lastRefreshedAt  DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  principal        AuthPrincipal     @relation(fields: [principalId], references: [id], onDelete: Restrict)
+  refreshTokens    RefreshToken[]
+
+  @@index([principalId, status, audience])
+  @@map("auth_session")
+}
+
+model RefreshToken {
+  id                String         @id @default(uuid()) @db.Uuid
+  sessionId         String         @db.Uuid
+  tokenHash         String         @unique
+  expiresAt         DateTime
+  revokedAt         DateTime?
+  replacedByTokenId String?        @unique @db.Uuid
+  createdAt         DateTime       @default(now())
+  session           AuthSession    @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  replacedBy        RefreshToken?  @relation("refresh_rotation", fields: [replacedByTokenId], references: [id], onDelete: Restrict)
+  previousTokens    RefreshToken[] @relation("refresh_rotation")
+
+  @@index([sessionId, revokedAt])
+  @@map("refresh_token")
+}
+
+model ExternalIdentity {
+  id          String        @id @default(uuid()) @db.Uuid
+  principalId String        @db.Uuid
+  issuer      String
+  subject     String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  principal   AuthPrincipal @relation(fields: [principalId], references: [id], onDelete: Restrict)
+
+  @@unique([issuer, subject])
+  @@index([principalId])
+  @@map("external_identity")
+}
+
+model RoleBinding {
+  id          String        @id @default(uuid()) @db.Uuid
+  principalId String        @db.Uuid
+  role        String
+  createdAt   DateTime      @default(now())
+  principal   AuthPrincipal @relation(fields: [principalId], references: [id], onDelete: Restrict)
+
+  @@unique([principalId, role])
+  @@map("role_binding")
 }
 
 model CreditProfileSnapshot {
@@ -256,6 +366,10 @@ model CreditAssessment {
   rationaleSummary        String?
   policyVersion           String
   requestedBy             String
+  reviewedByActorId       String?
+  reviewedByActorType     ActorType?
+  reviewDecisionedAt      DateTime?
+  reviewRationale         String?
   approvedThreshold       Int
   rejectedThreshold       Int
   createdAt               DateTime               @default(now())
@@ -329,12 +443,15 @@ model AuditEvent {
 model ExternalTransferEvent {
   id                String                    @id @default(uuid()) @db.Uuid
   transferRequestId String                    @db.Uuid
+  provider          String                    @default("simulator")
+  providerEventId   String?
   eventType         ExternalTransferEventType
   payload           Json
   createdAt         DateTime                  @default(now())
   processedAt       DateTime?
   transferRequest   TransferRequest           @relation(fields: [transferRequestId], references: [id], onDelete: Restrict)
 
+  @@unique([provider, providerEventId])
   @@index([transferRequestId, eventType])
   @@map("external_transfer_event")
 }
@@ -351,19 +468,19 @@ model BalanceProjection {
 }
 
 model AccountStatementProjection {
-  id                 String           @id @default(uuid()) @db.Uuid
-  accountId          String           @db.Uuid
-  journalEntryId     String           @db.Uuid
-  postingId          String           @unique @db.Uuid
-  effectiveAt        DateTime
-  amountMinor        BigInt
-  currency           String
-  direction          PostingDirection
+  id                  String           @id @default(uuid()) @db.Uuid
+  accountId           String           @db.Uuid
+  journalEntryId      String           @db.Uuid
+  postingId           String           @unique @db.Uuid
+  effectiveAt         DateTime
+  amountMinor         BigInt
+  currency            String
+  direction           PostingDirection
   runningBalanceMinor BigInt
-  createdAt          DateTime         @default(now())
-  account            Account          @relation(fields: [accountId], references: [id], onDelete: Restrict)
-  journalEntry       JournalEntry     @relation(fields: [journalEntryId], references: [id], onDelete: Restrict)
-  posting            Posting          @relation(fields: [postingId], references: [id], onDelete: Restrict)
+  createdAt           DateTime         @default(now())
+  account             Account          @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  journalEntry        JournalEntry     @relation(fields: [journalEntryId], references: [id], onDelete: Restrict)
+  posting             Posting          @relation(fields: [postingId], references: [id], onDelete: Restrict)
 
   @@index([accountId, effectiveAt])
   @@map("account_statement_projection")

@@ -14,7 +14,7 @@ describe("CreditService", () => {
     }
   };
 
-  it("creates an automated credit assessment and persists the audit trail", async () => {
+  it("creates a credit assessment that stops at manual review and persists the audit trail", async () => {
     const tx = {
       customer: {
         findUnique: vi.fn().mockResolvedValue({
@@ -55,7 +55,7 @@ describe("CreditService", () => {
           })
           .mockResolvedValueOnce({
             id: "assessment-1",
-            status: "APPROVED",
+            status: "UNDER_REVIEW",
             score: 760,
             rationaleSummary: "rationale"
           })
@@ -93,11 +93,11 @@ describe("CreditService", () => {
     expect(complete).toHaveBeenCalled();
     expect(recordInTransaction).toHaveBeenCalled();
     expect(result).toEqual({
-      statusCode: 200,
+      statusCode: 202,
       body: {
         data: {
           creditAssessmentId: "assessment-1",
-          status: "APPROVED",
+          status: "UNDER_REVIEW",
           score: 760,
           rationaleSummary: "rationale"
         }
@@ -122,11 +122,11 @@ describe("CreditService", () => {
       {
         begin: vi.fn().mockResolvedValue({
           replay: {
-            statusCode: 200,
+            statusCode: 202,
             body: {
               data: {
                 creditAssessmentId: "assessment-1",
-                status: "APPROVED"
+                status: "UNDER_REVIEW"
               }
             }
           }
@@ -143,11 +143,11 @@ describe("CreditService", () => {
         context
       )
     ).resolves.toEqual({
-      statusCode: 200,
+      statusCode: 202,
       body: {
         data: {
           creditAssessmentId: "assessment-1",
-          status: "APPROVED"
+          status: "UNDER_REVIEW"
         }
       }
     });
@@ -185,10 +185,14 @@ describe("CreditService", () => {
           findUnique: vi.fn().mockResolvedValue({
             id: "assessment-1",
             customerId: "customer-1",
-            status: "APPROVED",
+            status: "UNDER_REVIEW",
             score: 755,
             rationaleSummary: "strong-history",
             requestedBy: "ops-user",
+            reviewedByActorId: null,
+            reviewedByActorType: null,
+            reviewDecisionedAt: null,
+            reviewRationale: null,
             creditProfileSnapshot: {
               paymentHistoryPoints: 200,
               averageBalanceMinor: 500_000n,
@@ -209,10 +213,11 @@ describe("CreditService", () => {
     await expect(service.getAssessmentById("assessment-1", context)).resolves.toEqual({
       creditAssessmentId: "assessment-1",
       customerId: "customer-1",
-      status: "APPROVED",
+      status: "UNDER_REVIEW",
       score: 755,
       rationaleSummary: "strong-history",
       requestedBy: "ops-user",
+      reviewDecision: null,
       profileSnapshot: {
         paymentHistoryPoints: 200,
         averageBalanceMinor: 500000,
@@ -220,5 +225,113 @@ describe("CreditService", () => {
         snapshotVersion: "v1"
       }
     });
+  });
+
+  it("approves an assessment under review and records reviewer metadata", async () => {
+    const update = vi.fn().mockResolvedValue({
+      id: "assessment-1",
+      customerId: "customer-1",
+      status: "APPROVED",
+      score: 740,
+      rationaleSummary: "stable inflows",
+      requestedBy: "ops-user",
+      reviewedByActorId: "analyst-1",
+      reviewedByActorType: "ANALYST",
+      reviewDecisionedAt: new Date("2026-03-16T00:00:00.000Z"),
+      reviewRationale: "manual review approved",
+      creditProfileSnapshot: {
+        paymentHistoryPoints: 180,
+        averageBalanceMinor: 450_000n,
+        transactionFrequency: 14,
+        snapshotVersion: "v1"
+      }
+    });
+    const service = new CreditService(
+      {
+        creditAssessment: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "assessment-1",
+            customerId: "customer-1",
+            status: "UNDER_REVIEW"
+          }),
+          update
+        }
+      } as never,
+      {
+        scoreApproveThreshold: 700,
+        scoreRejectThreshold: 550
+      } as never,
+      {
+        record: vi.fn().mockResolvedValue(undefined)
+      } as never,
+      {} as never
+    );
+
+    const result = await service.reviewAssessment(
+      "assessment-1",
+      {
+        decision: "APPROVED",
+        reviewRationale: "manual review approved"
+      },
+      {
+        correlationId: "corr-review-1",
+        actor: {
+          actorId: "analyst-1",
+          actorType: "ANALYST",
+          roles: ["ANALYST"]
+        }
+      }
+    );
+
+    expect(update).toHaveBeenCalled();
+    expect(result.status).toBe("APPROVED");
+    expect(result.reviewDecision).toEqual({
+      reviewedBy: {
+        actorId: "analyst-1",
+        actorType: "ANALYST"
+      },
+      reviewedAt: "2026-03-16T00:00:00.000Z",
+      rationale: "manual review approved"
+    });
+  });
+
+  it("rejects review actions for assessments that are not under review", async () => {
+    const service = new CreditService(
+      {
+        creditAssessment: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "assessment-1",
+            customerId: "customer-1",
+            status: "APPROVED"
+          })
+        }
+      } as never,
+      {
+        scoreApproveThreshold: 700,
+        scoreRejectThreshold: 550
+      } as never,
+      {
+        record: vi.fn().mockResolvedValue(undefined)
+      } as never,
+      {} as never
+    );
+
+    await expect(
+      service.reviewAssessment(
+        "assessment-1",
+        {
+          decision: "REJECTED",
+          reviewRationale: "manual review rejected"
+        },
+        {
+          correlationId: "corr-review-2",
+          actor: {
+            actorId: "analyst-1",
+            actorType: "ANALYST",
+            roles: ["ANALYST"]
+          }
+        }
+      )
+    ).rejects.toBeInstanceOf(AppException);
   });
 });

@@ -1,6 +1,6 @@
 # State Machine
 
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 
 ## Transfer Request States
 
@@ -61,7 +61,7 @@ Allowed direction:
 Notes:
 
 - `APPROVED`, `REJECTED`, and `FAILED` are terminal
-- `UNDER_REVIEW` is only needed if manual review remains part of the operating model
+- `UNDER_REVIEW` is part of the target operating model and represents required manual reviewer action
 
 ## Batch Run States
 
@@ -93,5 +93,4 @@ Notes:
 ## Open Questions
 
 - whether interbank transfer cancellation remains allowed after external acknowledgement
-- whether manually approved credit decisions should distinguish `EXPIRED` from `REJECTED`
 - whether a batch run with retried shards should remain `PARTIALLY_FAILED` until every shard completes

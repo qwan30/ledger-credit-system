@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 
 import { assertAuthenticated, assertCustomerOwnsResource } from "@/common/auth/authorization";
 import { AppConfigService } from "@/common/config/app-config.service";
@@ -6,10 +6,11 @@ import { AppException } from "@/common/errors/app-exception";
 import { hashRequestPayload } from "@/common/idempotency/hash-request";
 import { IdempotencyService } from "@/common/idempotency/idempotency.service";
 import type { RequestContext } from "@/common/http/request-context";
-import { JobsService } from "@/common/jobs/jobs.service";
 import { Money } from "@/common/money/money";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { AuditService } from "@/modules/audit/audit.service";
+import { ExternalRailRegistry } from "@/modules/transfers/external-rail.registry";
+import { ExternalRailService } from "@/modules/transfers/external-rail.service";
 import { LedgerService } from "@/modules/ledger/ledger.service";
 import type { CreateTransferRequest } from "@/modules/transfers/transfers.schemas";
 
@@ -22,12 +23,13 @@ interface TransferMutationResult {
 @Injectable()
 export class TransfersService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly config: AppConfigService,
-    private readonly ledgerService: LedgerService,
-    private readonly auditService: AuditService,
-    private readonly idempotencyService: IdempotencyService,
-    private readonly jobsService: JobsService
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
+    @Inject(LedgerService) private readonly ledgerService: LedgerService,
+    @Inject(AuditService) private readonly auditService: AuditService,
+    @Inject(IdempotencyService) private readonly idempotencyService: IdempotencyService,
+    @Inject(ExternalRailRegistry) private readonly externalRailRegistry: ExternalRailRegistry,
+    @Inject(ExternalRailService) private readonly externalRailService: ExternalRailService
   ) {}
 
   async createTransfer(input: CreateTransferRequest, context: RequestContext) {
@@ -44,6 +46,10 @@ export class TransfersService {
     const idempotencyKey = context.idempotencyKey;
     const correlationId = context.correlationId;
     const requestHash = hashRequestPayload(input);
+    const externalRailProvider =
+      input.destination.type === "EXTERNAL_BANK"
+        ? this.externalRailRegistry.get(input.destination.provider ?? this.config.externalRailDefaultProvider).provider
+        : null;
 
     const transactionalResult = await this.prisma.$transaction<TransferMutationResult>(async (tx) => {
       const idempotency = await this.idempotencyService.begin(tx, "transfer.create", idempotencyKey, requestHash);
@@ -101,6 +107,7 @@ export class TransfersService {
           ...(input.destination.type === "INTERNAL_ACCOUNT"
             ? { destinationAccountId: input.destination.accountId }
             : {
+                externalRailProvider,
                 destinationExternalBankCode: input.destination.bankCode,
                 destinationExternalAccountNumber: input.destination.accountNumber,
                 destinationExternalAccountName: input.destination.accountName
@@ -195,13 +202,16 @@ export class TransfersService {
         };
       }
 
+      const resolvedExternalRailProvider = externalRailProvider ?? this.config.externalRailDefaultProvider;
       const clearingLedgerAccount = await this.ledgerService.findSystemLedgerAccount(tx, "CLEARING", amount.currency);
-      const externalReference = `sim_${transfer.id.slice(0, 8)}`;
+      const providerReferencePrefix = resolvedExternalRailProvider.replace(/[^a-z0-9]+/g, "_");
+      const externalReference = `${providerReferencePrefix}_${transfer.id.slice(0, 8)}`;
 
       await tx.transferRequest.update({
         where: { id: transfer.id },
         data: {
           status: "PENDING_EXTERNAL",
+          externalRailProvider: resolvedExternalRailProvider,
           externalReference
         }
       });
@@ -230,6 +240,8 @@ export class TransfersService {
       await tx.externalTransferEvent.create({
         data: {
           transferRequestId: transfer.id,
+          provider: resolvedExternalRailProvider,
+          providerEventId: `${transfer.id}:submitted`,
           eventType: "SUBMITTED",
           payload: {
             externalReference,
@@ -272,9 +284,7 @@ export class TransfersService {
     });
 
     if (transactionalResult.enqueueTransferId) {
-      await this.jobsService.publish("external-transfer.submit", {
-        transferRequestId: transactionalResult.enqueueTransferId
-      });
+      await this.externalRailService.enqueueTransferSubmission(transactionalResult.enqueueTransferId);
     }
 
     return {
@@ -314,11 +324,13 @@ export class TransfersService {
             }
           : {
               type: "EXTERNAL_BANK",
+              provider: transfer.externalRailProvider ?? this.config.externalRailDefaultProvider,
               bankCode: transfer.destinationExternalBankCode,
               accountNumber: transfer.destinationExternalAccountNumber,
               accountName: transfer.destinationExternalAccountName
             },
       externalReference: transfer.externalReference,
+      externalRailProvider: transfer.externalRailProvider ?? this.config.externalRailDefaultProvider,
       failureReason: transfer.failureReason,
       createdAt: transfer.createdAt.toISOString(),
       settledAt: transfer.settledAt?.toISOString()

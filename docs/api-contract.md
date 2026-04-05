@@ -1,6 +1,6 @@
 # API Contract
 
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 
 ## Target Public Endpoints
 
@@ -22,6 +22,25 @@ Minimum request shape:
   "sourceAccountId": "string",
   "destination": {
     "type": "INTERNAL_ACCOUNT"
+  },
+  "amount": {
+    "currency": "USD",
+    "minorUnits": 12500
+  }
+}
+```
+
+External-destination variant:
+
+```json
+{
+  "sourceAccountId": "string",
+  "destination": {
+    "type": "EXTERNAL_BANK",
+    "provider": "mock-bank",
+    "bankCode": "BANK01",
+    "accountNumber": "12345678",
+    "accountName": "Receiver Name"
   },
   "amount": {
     "currency": "USD",
@@ -67,6 +86,7 @@ Success response includes:
 - current status
 - amount and currency
 - source and destination references
+- selected external rail provider when the destination is external
 - external reference when present
 
 ### `GET /api/v1/accounts/{accountId}/balance`
@@ -116,10 +136,17 @@ Target response envelope:
 {
   "data": {
     "creditAssessmentId": "string",
-    "status": "REQUESTED"
+    "status": "UNDER_REVIEW",
+    "score": 735,
+    "rationaleSummary": "string"
   }
 }
 ```
+
+Target status semantics:
+
+- `202 Accepted` when assessment submission succeeds and enters `UNDER_REVIEW`
+- idempotent replay should return the original accepted payload
 
 ### `GET /api/v1/credit-assessments/{creditAssessmentId}`
 
@@ -130,6 +157,34 @@ Purpose:
 Security note:
 
 - only authorized reviewer, operator, or subject-visible roles should access this endpoint
+
+### `POST /api/v1/ops/credit-assessments/{creditAssessmentId}/approve`
+
+Purpose:
+
+- record a privileged reviewer approval for an assessment currently under review
+
+### `POST /api/v1/ops/credit-assessments/{creditAssessmentId}/reject`
+
+Purpose:
+
+- record a privileged reviewer rejection for an assessment currently under review
+
+### `POST /api/v1/integrations/external-rails/{provider}/events`
+
+Purpose:
+
+- ingest provider-specific external rail callbacks and normalize them into acknowledgement, settlement, failure, or compensation events
+
+Headers:
+
+- provider-authenticated signature or shared callback token
+- optional `X-Correlation-Id`
+
+Current providers:
+
+- `simulator`
+- `mock-bank`
 
 ### `GET /api/v1/batch-runs/{batchRunId}`
 
@@ -189,7 +244,6 @@ Audit capture is required for:
 
 Not yet pinned down:
 
-- the full authn/authz scheme and token format
-- the exact pagination cursor shape
-- the external destination schema for interbank rails
-- whether operator endpoints for replay and remediation live under `/ops` or another namespace
+- provider-specific signature validation shape for external callback requests
+- the exact pagination cursor shape for every list endpoint
+- whether future rail providers require a generic callback ingress alias in addition to provider-specific routes

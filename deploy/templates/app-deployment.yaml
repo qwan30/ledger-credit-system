@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ledger-credit-system
+  namespace: <APP_NAMESPACE>
+  labels:
+    app: ledger-credit-system
+spec:
+  replicas: <REPLICAS>
+  selector:
+    matchLabels:
+      app: ledger-credit-system
+  template:
+    metadata:
+      labels:
+        app: ledger-credit-system
+    spec:
+      containers:
+        - name: ledger-credit-system
+          image: <IMAGE>
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: <APP_PORT>
+          envFrom:
+            - configMapRef:
+                name: <CONFIGMAP_NAME>
+            - secretRef:
+                name: <SECRET_NAME>
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "<APP_PORT>"
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health/live
+              port: <APP_PORT>
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health/ready
+              port: <APP_PORT>
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ledger-credit-system
+  namespace: <APP_NAMESPACE>
+  labels:
+    app: ledger-credit-system
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: <APP_PORT>
+  selector:
+    app: ledger-credit-system

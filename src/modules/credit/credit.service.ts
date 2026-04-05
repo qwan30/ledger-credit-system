@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 
 import { assertAuthenticated, assertCustomerOwnsResource } from "@/common/auth/authorization";
 import { AppConfigService } from "@/common/config/app-config.service";
@@ -12,15 +12,18 @@ import {
   computeCreditDecision,
   type CreditProfileInput
 } from "@/modules/credit/domain/credit-scoring.policy";
-import type { CreateCreditAssessmentRequest } from "@/modules/credit/credit.schemas";
+import type {
+  CreateCreditAssessmentRequest,
+  ReviewCreditAssessmentRequest
+} from "@/modules/credit/credit.schemas";
 
 @Injectable()
 export class CreditService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly config: AppConfigService,
-    private readonly auditService: AuditService,
-    private readonly idempotencyService: IdempotencyService
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
+    @Inject(AuditService) private readonly auditService: AuditService,
+    @Inject(IdempotencyService) private readonly idempotencyService: IdempotencyService
   ) {}
 
   async createAssessment(input: CreateCreditAssessmentRequest, context: RequestContext) {
@@ -139,7 +142,7 @@ export class CreditService {
       assessment = await tx.creditAssessment.update({
         where: { id: assessment.id },
         data: {
-          status: decision.status
+          status: "UNDER_REVIEW"
         }
       });
 
@@ -155,7 +158,7 @@ export class CreditService {
       await this.idempotencyService.complete(
         tx,
         idempotency.recordId!,
-        200,
+        202,
         responseBody,
         "credit_assessment",
         assessment.id
@@ -171,12 +174,64 @@ export class CreditService {
       });
 
       return {
-        statusCode: 200,
+        statusCode: 202,
         body: responseBody
       };
     });
 
     return result;
+  }
+
+  async reviewAssessment(creditAssessmentId: string, input: ReviewCreditAssessmentRequest & { decision: "APPROVED" | "REJECTED" }, context: RequestContext) {
+    assertAuthenticated(context);
+
+    const assessment = await this.prisma.creditAssessment.findUnique({
+      where: {
+        id: creditAssessmentId
+      },
+      include: {
+        creditProfileSnapshot: true
+      }
+    });
+
+    if (!assessment) {
+      throw new AppException(404, "credit_assessment_not_found", "Credit assessment was not found.");
+    }
+
+    if (assessment.status !== "UNDER_REVIEW") {
+      throw new AppException(
+        409,
+        "credit_assessment_not_reviewable",
+        "Only assessments under review may be approved or rejected."
+      );
+    }
+
+    const updated = await this.prisma.creditAssessment.update({
+      where: {
+        id: creditAssessmentId
+      },
+      data: {
+        status: input.decision,
+        reviewedByActorId: context.actor?.actorId ?? null,
+        reviewedByActorType: (context.actor?.actorType as never) ?? null,
+        reviewDecisionedAt: new Date(),
+        reviewRationale: input.reviewRationale
+      },
+      include: {
+        creditProfileSnapshot: true
+      }
+    });
+
+    await this.auditService.record(context, {
+      actionType: `credit_assessment.${input.decision.toLowerCase()}`,
+      resourceType: "credit_assessment",
+      resourceId: updated.id,
+      metadata: {
+        status: updated.status
+      }
+    });
+
+    return this.mapAssessment(updated);
   }
 
   async getAssessmentById(creditAssessmentId: string, context: RequestContext) {
@@ -194,6 +249,27 @@ export class CreditService {
 
     assertCustomerOwnsResource(context, assessment.customerId);
 
+    return this.mapAssessment(assessment);
+  }
+
+  private mapAssessment(assessment: {
+    id: string;
+    customerId: string;
+    status: string;
+    score: number | null;
+    rationaleSummary: string | null;
+    requestedBy: string;
+    reviewedByActorId: string | null;
+    reviewedByActorType: string | null;
+    reviewDecisionedAt: Date | null;
+    reviewRationale: string | null;
+    creditProfileSnapshot: {
+      paymentHistoryPoints: number;
+      averageBalanceMinor: bigint;
+      transactionFrequency: number;
+      snapshotVersion: string;
+    };
+  }) {
     return {
       creditAssessmentId: assessment.id,
       customerId: assessment.customerId,
@@ -201,6 +277,17 @@ export class CreditService {
       score: assessment.score,
       rationaleSummary: assessment.rationaleSummary,
       requestedBy: assessment.requestedBy,
+      reviewDecision:
+        assessment.reviewDecisionedAt && assessment.reviewedByActorId && assessment.reviewedByActorType
+          ? {
+              reviewedBy: {
+                actorId: assessment.reviewedByActorId,
+                actorType: assessment.reviewedByActorType
+              },
+              reviewedAt: assessment.reviewDecisionedAt.toISOString(),
+              rationale: assessment.reviewRationale
+            }
+          : null,
       profileSnapshot: {
         paymentHistoryPoints: assessment.creditProfileSnapshot.paymentHistoryPoints,
         averageBalanceMinor: Number(assessment.creditProfileSnapshot.averageBalanceMinor),

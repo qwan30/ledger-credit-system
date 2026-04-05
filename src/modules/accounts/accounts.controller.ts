@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Req } from "@nestjs/common";
+import { Controller, Get, Inject, Query, Req } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
 
 import { Roles } from "@/common/auth/roles.decorator";
@@ -8,7 +8,7 @@ import { AccountsService } from "@/modules/accounts/accounts.service";
 @Controller("accounts")
 @Roles("CUSTOMER", "OPS", "AUDITOR", "ADMIN")
 export class AccountsController {
-  constructor(private readonly accountsService: AccountsService) {}
+  constructor(@Inject(AccountsService) private readonly accountsService: AccountsService) {}
 
   @Get(":accountId/balance")
   async getBalance(@Req() request: FastifyRequest & { params: { accountId: string } }) {

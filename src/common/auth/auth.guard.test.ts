@@ -20,10 +20,7 @@ describe("AuthGuard", () => {
         getAllAndOverride: vi.fn().mockReturnValue(true)
       } as never,
       {
-        verifyAsync: vi.fn()
-      } as never,
-      {
-        jwtSecret: "secret-value"
+        authenticateAccessToken: vi.fn()
       } as never
     );
 
@@ -36,10 +33,7 @@ describe("AuthGuard", () => {
         getAllAndOverride: vi.fn().mockReturnValue(false)
       } as never,
       {
-        verifyAsync: vi.fn()
-      } as never,
-      {
-        jwtSecret: "secret-value"
+        authenticateAccessToken: vi.fn()
       } as never
     );
 
@@ -53,27 +47,25 @@ describe("AuthGuard", () => {
         "x-correlation-id": "corr-1"
       }
     };
-    const verifyAsync = vi.fn().mockResolvedValue({
-      sub: "actor-1",
-      actorType: "ADMIN",
-      roles: ["ADMIN"]
+    const authenticateAccessToken = vi.fn().mockResolvedValue({
+      actor: {
+        actorId: "actor-1",
+        actorType: "ADMIN",
+        roles: ["ADMIN"]
+      },
+      audience: "ops-api"
     });
     const guard = new AuthGuard(
       {
         getAllAndOverride: vi.fn().mockReturnValue(false)
       } as never,
       {
-        verifyAsync
-      } as never,
-      {
-        jwtSecret: "secret-value"
+        authenticateAccessToken
       } as never
     );
 
     await expect(guard.canActivate(createExecutionContext(request))).resolves.toBe(true);
-    expect(verifyAsync).toHaveBeenCalledWith("signed-token", {
-      secret: "secret-value"
-    });
+    expect(authenticateAccessToken).toHaveBeenCalledWith("signed-token");
     expect((request as { context?: { actor?: { actorId: string } } }).context?.actor?.actorId).toBe("actor-1");
   });
 });

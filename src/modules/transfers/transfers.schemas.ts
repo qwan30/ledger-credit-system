@@ -12,6 +12,16 @@ export const internalDestinationSchema = z.object({
 
 export const externalDestinationSchema = z.object({
   type: z.literal("EXTERNAL_BANK"),
+  provider: z
+    .string()
+    .trim()
+    .min(1)
+    .max(64)
+    .transform((value) => value.toLowerCase())
+    .refine((value) => /^[a-z0-9-]+$/.test(value), {
+      message: "Provider must use lowercase letters, numbers, or hyphens."
+    })
+    .optional(),
   bankCode: z.string().trim().min(2).max(32),
   accountNumber: z.string().trim().min(4).max(64),
   accountName: z.string().trim().min(1).max(200)

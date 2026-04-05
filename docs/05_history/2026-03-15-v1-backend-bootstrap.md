@@ -17,4 +17,4 @@ The repository moved from docs-only to a working NestJS finance backend scaffold
 - add integration and contract coverage around the HTTP APIs and async job flows
 - harden auth with a real issuer and tighten customer-vs-operator authorization cases
 - replace the external transfer simulator with a real adapter only after settlement semantics are specified
-- add a benchmark harness for the end-of-day batch throughput target
+- run and archive benchmark evidence for the end-of-day batch throughput target using `scripts/benchmark-batch.ts`

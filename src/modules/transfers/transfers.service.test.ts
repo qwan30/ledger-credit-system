@@ -69,7 +69,10 @@ describe("TransfersService", () => {
         complete
       } as never,
       {
-        publish: vi.fn()
+        get: vi.fn()
+      } as never,
+      {
+        enqueueTransferSubmission: vi.fn()
       } as never
     );
 
@@ -105,6 +108,7 @@ describe("TransfersService", () => {
 
   it("creates an external transfer and enqueues async settlement", async () => {
     const publish = vi.fn().mockResolvedValue(undefined);
+    const transferUpdate = vi.fn().mockResolvedValue({});
     const tx = {
       account: {
         findUnique: vi.fn().mockResolvedValue({
@@ -120,12 +124,15 @@ describe("TransfersService", () => {
         create: vi.fn().mockResolvedValue({
           id: "transfer-2"
         }),
-        update: vi.fn().mockResolvedValue({})
+        update: transferUpdate
       },
       externalTransferEvent: {
         create: vi.fn().mockResolvedValue(undefined)
       }
     } as never;
+    const registryGet = vi.fn().mockReturnValue({
+      provider: "mock-bank"
+    });
     const service = new TransfersService(
       {
         $transaction: vi.fn((callback) => callback(tx))
@@ -145,7 +152,10 @@ describe("TransfersService", () => {
         complete: vi.fn().mockResolvedValue(undefined)
       } as never,
       {
-        publish
+        get: registryGet
+      } as never,
+      {
+        enqueueTransferSubmission: publish
       } as never
     );
 
@@ -154,6 +164,7 @@ describe("TransfersService", () => {
         sourceAccountId: "account-source",
         destination: {
           type: "EXTERNAL_BANK",
+          provider: "mock-bank",
           bankCode: "VCB",
           accountNumber: "12345678",
           accountName: "Receiver"
@@ -166,9 +177,16 @@ describe("TransfersService", () => {
       context
     );
 
-    expect(publish).toHaveBeenCalledWith("external-transfer.submit", {
-      transferRequestId: "transfer-2"
-    });
+    expect(registryGet).toHaveBeenCalledWith("mock-bank");
+    expect(transferUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "transfer-2" },
+        data: expect.objectContaining({
+          externalRailProvider: "mock-bank"
+        })
+      })
+    );
+    expect(publish).toHaveBeenCalledWith("transfer-2");
     expect(result).toEqual({
       statusCode: 202,
       body: {
@@ -204,7 +222,10 @@ describe("TransfersService", () => {
         })
       } as never,
       {
-        publish: vi.fn()
+        get: vi.fn()
+      } as never,
+      {
+        enqueueTransferSubmission: vi.fn()
       } as never
     );
 
@@ -242,6 +263,9 @@ describe("TransfersService", () => {
       {} as never,
       {} as never,
       {} as never,
+      {
+        get: vi.fn()
+      } as never,
       {} as never
     );
 
@@ -298,6 +322,9 @@ describe("TransfersService", () => {
       {} as never,
       {} as never,
       {} as never,
+      {
+        get: vi.fn()
+      } as never,
       {} as never
     );
 
@@ -308,6 +335,48 @@ describe("TransfersService", () => {
         type: "INTERNAL_ACCOUNT",
         accountId: "account-destination"
       }
+    });
+  });
+
+  it("rejects unsupported external rail providers before persisting the transfer", async () => {
+    const service = new TransfersService(
+      {
+        $transaction: vi.fn()
+      } as never,
+      {
+        supportedCurrencies: ["USD"]
+      } as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {
+        get: vi.fn(() => {
+          throw new AppException(422, "external_rail_provider_not_supported", "Unsupported provider.");
+        })
+      } as never,
+      {} as never
+    );
+
+    await expect(
+      service.createTransfer(
+        {
+          sourceAccountId: "account-source",
+          destination: {
+            type: "EXTERNAL_BANK",
+            provider: "unsupported-bank",
+            bankCode: "VCB",
+            accountNumber: "12345678",
+            accountName: "Receiver"
+          },
+          amount: {
+            currency: "USD",
+            minorUnits: 2500
+          }
+        },
+        context
+      )
+    ).rejects.toMatchObject({
+      code: "external_rail_provider_not_supported"
     });
   });
 });

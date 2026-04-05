@@ -6,3 +6,8 @@ coverage
 !.env.example
 prisma/dev.db
 *.log
+artifacts/benchmark
+apps/web/.next
+apps/web/node_modules
+apps/api-java/target
+packages/api-contracts/generated

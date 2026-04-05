@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Req, Res } from "@nestjs/common";
+import { Controller, Get, Inject, Post, Req, Res } from "@nestjs/common";
 import type { FastifyReply, FastifyRequest } from "fastify";
 
 import { Roles } from "@/common/auth/roles.decorator";
@@ -10,10 +10,10 @@ import { CreditService } from "@/modules/credit/credit.service";
 @Controller("credit-assessments")
 @Roles("CUSTOMER", "ANALYST", "AUDITOR", "ADMIN")
 export class CreditController {
-  constructor(private readonly creditService: CreditService) {}
+  constructor(@Inject(CreditService) private readonly creditService: CreditService) {}
 
   @Post()
-  async createAssessment(@Req() request: FastifyRequest, @Res() reply: FastifyReply) {
+  async createAssessment(@Req() request: FastifyRequest, @Res({ passthrough: true }) reply: FastifyReply) {
     const input = parseSchema(createCreditAssessmentSchema, request.body);
     const result = await this.creditService.createAssessment(input, getRequestContext(request));
 

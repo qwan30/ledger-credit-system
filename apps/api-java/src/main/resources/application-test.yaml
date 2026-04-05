@@ -1,0 +1,5 @@
+spring:
+  autoconfigure:
+    exclude: org.jobrunr.spring.autoconfigure.JobRunrAutoConfiguration
+  flyway:
+    enabled: false

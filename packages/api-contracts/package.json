@@ -1,0 +1,17 @@
+{
+  "name": "@ledger-credit-system/api-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Frozen OpenAPI contract and generated TypeScript types for the Java and Next.js migration.",
+  "types": "./generated/types.d.ts",
+  "exports": {
+    ".": {
+      "types": "./generated/types.d.ts",
+      "default": "./generated/types.d.ts"
+    }
+  },
+  "scripts": {
+    "generate": "openapi-typescript openapi/openapi.yaml --output generated/types.d.ts",
+    "check": "npm run generate"
+  }
+}

@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  build-test:
+  legacy-build-test:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -33,7 +33,15 @@ jobs:
       SCORE_REJECT_THRESHOLD: 550
       RATE_LIMIT_MAX: 100
       RATE_LIMIT_WINDOW_MS: 60000
+      EXTERNAL_RAIL_DEFAULT_PROVIDER: simulator
+      EXTERNAL_RAIL_CALLBACK_SECRET: ci-callback-secret
       EXTERNAL_SIMULATOR_SETTLEMENT_DELAY_MS: 10
+      INTEREST_RATE_BPS: 250
+      AUTH_ACCESS_TTL_SECONDS: 900
+      AUTH_REFRESH_TTL_SECONDS: 604800
+      AUTH_INTERNAL_ISSUER: ledger-credit-system
+      AUTH_CUSTOMER_AUDIENCE: customer-api
+      AUTH_OPERATOR_AUDIENCE: ops-api
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -41,9 +49,41 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run prisma:generate
-      - run: npx prisma migrate deploy
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm run test
-      - run: npm run build
+      - run: npm run verify:full
+
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run contracts:check
+
+  api-java:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - run: mvn -f apps/api-java/pom.xml test
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run contracts:generate
+      - run: npm run web:typecheck
+      - run: npm run web:lint
+      - run: npm run web:test
+      - run: npm run web:build

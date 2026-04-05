@@ -1,0 +1,58 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: ledger-credit-java
+  autoconfigure:
+    exclude: org.jobrunr.spring.autoconfigure.JobRunrAutoConfiguration
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:55432/ledger_credit_system}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
+  flyway:
+    enabled: ${FLYWAY_ENABLED:false}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+org:
+  jobrunr:
+    background-job-server:
+      enabled: ${JOBRUNR_SERVER_ENABLED:false}
+    dashboard:
+      enabled: ${JOBRUNR_DASHBOARD_ENABLED:false}
+
+app:
+  api-base-path: /api/v1
+  docs-path: /docs
+  supported-currencies: ${SUPPORTED_CURRENCIES:USD}
+  business-timezone: ${BUSINESS_TIMEZONE:UTC}
+  rate-limit:
+    max: ${RATE_LIMIT_MAX:100}
+    window-ms: ${RATE_LIMIT_WINDOW_MS:60000}
+  auth:
+    internal-issuer: ${AUTH_INTERNAL_ISSUER:ledger-credit-system}
+    customer-audience: ${AUTH_CUSTOMER_AUDIENCE:customer-api}
+    operator-audience: ${AUTH_OPERATOR_AUDIENCE:ops-api}
+    jwt-secret: ${JWT_SECRET:replace-me}
+  batch:
+    close-window-cron: ${CLOSE_WINDOW_CRON:0 0 * * *}
+    shard-size: ${BATCH_SHARD_SIZE:500}
+    worker-concurrency: ${BATCH_WORKER_CONCURRENCY:25}
+  external-rail:
+    default-provider: ${EXTERNAL_RAIL_DEFAULT_PROVIDER:simulator}
+    callback-secret: ${EXTERNAL_RAIL_CALLBACK_SECRET:callback-secret}

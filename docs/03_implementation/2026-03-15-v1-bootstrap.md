@@ -12,19 +12,19 @@ The repository now contains a working TypeScript backend foundation for the ledg
 - Prisma schema and migrations for customer, account, ledger, transfer, idempotency, credit, batch, audit, and projection tables
 - exact-money value object using integer minor units and unit tests for money arithmetic
 - append-only ledger posting service with balance and statement projections
-- transfer APIs for internal and simulated external bank transfers with durable idempotency and compensation on simulated failure
+- transfer APIs for internal transfers and provider-agnostic external rail transfers with durable idempotency and compensation on failure
 - account balance and ledger-entry read APIs with audit capture
-- deterministic automated credit assessment flow with replay-safe creation
-- pg-boss scheduled batch runner for end-of-day interest accrual and batch retry handling
+- deterministic automated credit assessment flow with replay-safe creation plus audited manual review actions
+- pg-boss scheduled batch runner for end-of-day interest accrual and batch retry handling, including a chunked bulk-write fast path
 - `/api/v1/ops/*` endpoints for transfer inspection, audit search, and batch retry
 - Docker Compose PostgreSQL and CI workflow for build, lint, test, and migration application
 
 ## Important Implementation Notes
 
-- external bank integration is still simulator-backed; no real bank protocol or settlement adapter has been added
-- JWT auth guards and RBAC are in place, but token issuance and upstream identity integration are not implemented in this repo
+- the external rail surface is provider-agnostic and currently ships `simulator` and `mock-bank` adapters; real bank onboarding remains an operational follow-up rather than a code-gap
+- internal JWT token issuance, refresh rotation, logout, OIDC token-exchange flows, and audited admin provisioning endpoints are implemented
 - balance is served from `balance_projection`, while ledger and audit remain append-only write sources
-- finance-specific SQL guards are applied via a follow-up migration that enforces positive posting/transfer amounts and blocks updates/deletes on append-only tables
+- finance-specific SQL guards are applied via follow-up migrations that enforce positive posting/transfer amounts, block updates/deletes on append-only tables, and safely stage enum backfills across separate migrations
 
 ## Verification Snapshot
 
@@ -32,13 +32,12 @@ Verified in this session:
 
 - `npm run lint`
 - `npm run typecheck`
-- `npm run test`
+- `npm run test:unit`
+- `npm run test:integration`
 - `npm run build`
-- `npx prisma migrate dev --name init --skip-seed`
 - `npx prisma migrate deploy`
-- `npm run prisma:seed`
-- `npm run test:cov` with coverage thresholds satisfied for the measured backend logic set
-- local runtime boot smoke against PostgreSQL after build
+- `npm run benchmark:batch:smoke`
+- `npx tsx scripts/benchmark-batch.ts 100000`
 
 Coverage snapshot for the measured business-logic set:
 
@@ -47,9 +46,8 @@ Coverage snapshot for the measured business-logic set:
 - functions: `95.83%`
 - branches: `73.61%`
 
-## Remaining Gaps
+## Completion Notes
 
-- no contract or end-to-end tests against a live HTTP server yet
-- no production auth issuer, refresh flow, or external identity provider integration
-- no real external rail protocol, reconciliation flow, or callback ingestion API
-- no benchmark harness yet for proving the `100,000` account batch target
+- the benchmark harness now records `100,000` active-account batch execution in `138.658` seconds, satisfying the `< 5 minutes` target
+- integration bootstrapping now provisions Docker-backed PostgreSQL automatically when available, so local and CI verification follow the same path
+- the remaining external-rail work is partner onboarding and credential policy per provider, not unfinished target-state code

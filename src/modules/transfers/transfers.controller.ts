@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Req, Res } from "@nestjs/common";
+import { Controller, Get, Inject, Post, Req, Res } from "@nestjs/common";
 import type { FastifyReply, FastifyRequest } from "fastify";
 
 import { Roles } from "@/common/auth/roles.decorator";
@@ -10,10 +10,10 @@ import { TransfersService } from "@/modules/transfers/transfers.service";
 @Controller("transfers")
 @Roles("CUSTOMER", "OPS", "ADMIN")
 export class TransfersController {
-  constructor(private readonly transfersService: TransfersService) {}
+  constructor(@Inject(TransfersService) private readonly transfersService: TransfersService) {}
 
   @Post()
-  async createTransfer(@Req() request: FastifyRequest, @Res() reply: FastifyReply) {
+  async createTransfer(@Req() request: FastifyRequest, @Res({ passthrough: true }) reply: FastifyReply) {
     const input = parseSchema(createTransferSchema, request.body);
     const result = await this.transfersService.createTransfer(input, getRequestContext(request));
 

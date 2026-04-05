@@ -4,10 +4,10 @@
 
 This repository defines a target-state TypeScript finance backend centered on a double-entry ledger, transfer orchestration, credit scoring, and end-of-day financial batch processing. The architecture is intentionally biased toward exact-money handling, append-only state reconstruction, and auditable operator behavior.
 
-Verified documentation baseline on 2026-03-15:
+Verified documentation baseline on 2026-03-16:
 
-- the repository currently contains documentation only
-- the canonical stack direction comes from the root `AGENTS.md`
+- the repository contains a working NestJS backend with Prisma, auth, ledger, transfer, credit, batch, and ops modules
+- the canonical stack direction and invariants come from the root `AGENTS.md`
 - the original idea brief is preserved separately as a source artifact
 
 ## Target Runtime Surface
@@ -129,8 +129,7 @@ Target assumptions, not yet implemented:
 
 ## Current Follow-Ups
 
-Open target-state placeholders:
+Current operational follow-ups:
 
-- define the external rail settlement model in more detail
-- choose the concrete TypeScript application framework and background execution mechanism
-- decide whether credit scoring starts with deterministic rules, statistical models, or both
+- onboard additional real-world rail providers behind the existing adapter contract
+- document provider-specific callback authentication policies and key-rotation procedures

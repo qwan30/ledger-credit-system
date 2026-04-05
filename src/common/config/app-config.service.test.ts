@@ -17,6 +17,8 @@ describe("AppConfigService", () => {
         SCORE_REJECT_THRESHOLD: "550",
         RATE_LIMIT_MAX: "100",
         RATE_LIMIT_WINDOW_MS: "60000",
+        EXTERNAL_RAIL_DEFAULT_PROVIDER: "simulator",
+        EXTERNAL_RAIL_CALLBACK_SECRET: "callback-secret",
         EXTERNAL_SIMULATOR_SETTLEMENT_DELAY_MS: "100",
         INTEREST_RATE_BPS: "250"
       };
@@ -38,6 +40,8 @@ describe("AppConfigService", () => {
     expect(service.scoreRejectThreshold).toBe(550);
     expect(service.rateLimitMax).toBe(100);
     expect(service.rateLimitWindowMs).toBe(60000);
+    expect(service.externalRailDefaultProvider).toBe("simulator");
+    expect(service.externalRailCallbackSecret).toBe("callback-secret");
     expect(service.externalSimulatorSettlementDelayMs).toBe(100);
     expect(service.interestRateBps).toBe(250n);
   });

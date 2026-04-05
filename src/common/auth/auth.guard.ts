@@ -1,20 +1,17 @@
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
+import { CanActivate, ExecutionContext, Inject, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import type { FastifyRequest } from "fastify";
 
+import { AuthIdentityService } from "@/common/auth/auth-identity.service";
 import { IS_PUBLIC_KEY } from "@/common/auth/public.decorator";
-import type { JwtPayload } from "@/common/auth/jwt-payload";
-import { AppConfigService } from "@/common/config/app-config.service";
 import { AppException } from "@/common/errors/app-exception";
 import { getRequestContext } from "@/common/http/request-context";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
-    private readonly reflector: Reflector,
-    private readonly jwtService: JwtService,
-    private readonly config: AppConfigService
+    @Inject(Reflector) private readonly reflector: Reflector,
+    @Inject(AuthIdentityService) private readonly authIdentityService: AuthIdentityService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -35,16 +32,10 @@ export class AuthGuard implements CanActivate {
     }
 
     const token = authorizationHeader.replace("Bearer ", "");
-    const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
-      secret: this.config.jwtSecret
-    });
+    const authenticated = await this.authIdentityService.authenticateAccessToken(token);
 
     const requestContext = getRequestContext(request);
-    requestContext.actor = {
-      actorId: payload.sub,
-      actorType: payload.actorType,
-      roles: payload.roles
-    };
+    requestContext.actor = authenticated.actor;
 
     return true;
   }

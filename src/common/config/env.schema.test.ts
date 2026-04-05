@@ -17,6 +17,8 @@ describe("validateEnvironment", () => {
         SCORE_REJECT_THRESHOLD: "550",
         RATE_LIMIT_MAX: "100",
         RATE_LIMIT_WINDOW_MS: "60000",
+        EXTERNAL_RAIL_DEFAULT_PROVIDER: "simulator",
+        EXTERNAL_RAIL_CALLBACK_SECRET: "callback-secret",
         EXTERNAL_SIMULATOR_SETTLEMENT_DELAY_MS: "100",
         INTEREST_RATE_BPS: "250"
       })

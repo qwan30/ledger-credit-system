@@ -1,0 +1,2 @@
+-- Baseline placeholder for the Java migration.
+-- The existing PostgreSQL schema remains authoritative during wave 1.

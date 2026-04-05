@@ -1,6 +1,6 @@
 # Project Overview
 
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 
 ## Problem Statement
 
@@ -15,13 +15,13 @@ The target system is a core banking-style ledger and smart credit platform that 
 
 Current repository shape:
 
-- documentation-first repository with no application implementation committed yet
-- project instructions in the root `AGENTS.md` define the repo truth as a TypeScript finance backend
+- NestJS + Fastify backend committed in `src/` with Prisma persistence in `prisma/`
+- project instructions in the root `AGENTS.md` define finance-domain invariants and operating rules
 - the original seed brief is preserved in `docs/01_ideation/2026-03-15-initial-requirement-brief.md`
 
 Current state implications:
 
-- this docs set describes the target architecture and requirements, not implemented behavior
+- this docs set contains both implemented v1 behavior and target-state requirements that are still open
 - references in the seed brief to Java, Spring Boot, Spring Batch, JPA, Mockito, or Drools are treated as source-context ideas rather than the canonical stack direction
 
 ## Target System Summary
@@ -54,16 +54,18 @@ The source brief has been decomposed into canonical docs:
 - data integrity and audit expectations -> `docs/data-model.md`, `docs/non-functional-requirements.md`, `docs/configuration-rules.md`
 - batch and automation intent -> `docs/automation-tasks.md`, `docs/non-functional-requirements.md`
 
-## Major Known Gaps
+## Current Completion Snapshot
 
-Not yet specified in implementation detail:
+The repository now implements the current canonical target set, including:
 
-- the exact TypeScript framework and execution model
-- the external bank integration protocol and settlement mechanics
-- whether scoring logic is rule-based, model-based, or hybrid
-- exact authn/authz model for operator and auditor endpoints
+- provider-agnostic external rail adapters with simulator and `mock-bank` implementations
+- manual credit review workflow from `UNDER_REVIEW` to `APPROVED` or `REJECTED`
+- audited admin provisioning for principals, role bindings, and external identity mappings
+- a reproducible verification path that can bootstrap local PostgreSQL through Docker when needed
 
-These gaps are intentional and remain open until code and delivery plans refine them.
+Operational follow-ups that remain outside the canonical target set:
+
+- onboarding real bank or scheme-specific rail adapters and signature policies
 
 ## Recommended Reading Order
 

@@ -4,7 +4,18 @@ import eslintConfigPrettier from "eslint-config-prettier";
 
 export default tseslint.config(
   {
-    ignores: ["dist/**", "coverage/**", "node_modules/**", "eslint.config.mjs"]
+    ignores: [
+      "dist/**",
+      "coverage/**",
+      "node_modules/**",
+      "apps/web/**",
+      "apps/api-java/**",
+      "packages/api-contracts/**",
+      "apps/web/.next/**",
+      "apps/api-java/target/**",
+      "packages/api-contracts/generated/**",
+      "eslint.config.mjs"
+    ]
   },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,

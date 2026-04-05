@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
 
 import type { RequestContext } from "@/common/http/request-context";
@@ -13,7 +13,7 @@ export interface AuditRecordInput {
 
 @Injectable()
 export class AuditService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async record(context: RequestContext | undefined, input: AuditRecordInput): Promise<void> {
     const auditData = {

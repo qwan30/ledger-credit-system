@@ -1,0 +1,878 @@
+openapi: 3.1.0
+info:
+  title: Ledger Credit System API
+  version: 1.0.0
+  description: Frozen wave-1 REST contract for the Java + Next.js migration.
+servers:
+  - url: /api/v1
+tags:
+  - name: Health
+  - name: Auth
+  - name: Accounts
+  - name: Transfers
+  - name: Credit
+  - name: Batch
+  - name: Ops
+  - name: Integrations
+paths:
+  /health/live:
+    get:
+      tags: [Health]
+      operationId: getLiveness
+      responses:
+        "200":
+          description: Liveness status.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusEnvelope"
+  /health/ready:
+    get:
+      tags: [Health]
+      operationId: getReadiness
+      responses:
+        "200":
+          description: Readiness status.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusEnvelope"
+  /auth/login:
+    post:
+      tags: [Auth]
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/PasswordLoginRequest"
+                - $ref: "#/components/schemas/TokenExchangeRequest"
+      responses:
+        "200":
+          description: Authenticated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokenEnvelope"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "422":
+          $ref: "#/components/responses/ErrorResponse"
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      operationId: refresh
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: Refreshed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokenEnvelope"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+  /auth/logout:
+    post:
+      tags: [Auth]
+      operationId: logout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LogoutRequest"
+      responses:
+        "200":
+          description: Logged out successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogoutEnvelope"
+  /accounts/{accountId}/balance:
+    get:
+      tags: [Accounts]
+      operationId: getAccountBalance
+      parameters:
+        - $ref: "#/components/parameters/AccountId"
+      responses:
+        "200":
+          description: Current balance for an account.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountBalanceEnvelope"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+  /accounts/{accountId}/ledger-entries:
+    get:
+      tags: [Accounts]
+      operationId: getLedgerEntries
+      parameters:
+        - $ref: "#/components/parameters/AccountId"
+        - in: query
+          name: cursor
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        "200":
+          description: Ledger history for an account.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LedgerEntryListEnvelope"
+  /transfers:
+    post:
+      tags: [Transfers]
+      operationId: createTransfer
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTransferRequest"
+      responses:
+        "200":
+          description: Transfer completed synchronously.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransferMutationEnvelope"
+        "202":
+          description: Transfer accepted for asynchronous processing.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransferMutationEnvelope"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "409":
+          $ref: "#/components/responses/ErrorResponse"
+        "422":
+          $ref: "#/components/responses/ErrorResponse"
+  /transfers/{transferRequestId}:
+    get:
+      tags: [Transfers]
+      operationId: getTransfer
+      parameters:
+        - $ref: "#/components/parameters/TransferRequestId"
+      responses:
+        "200":
+          description: Transfer detail.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransferDetailEnvelope"
+  /credit-assessments:
+    post:
+      tags: [Credit]
+      operationId: createCreditAssessment
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCreditAssessmentRequest"
+      responses:
+        "200":
+          description: Replayed idempotent assessment response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreditAssessmentEnvelope"
+        "202":
+          description: Assessment accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreditAssessmentEnvelope"
+  /credit-assessments/{creditAssessmentId}:
+    get:
+      tags: [Credit]
+      operationId: getCreditAssessment
+      parameters:
+        - $ref: "#/components/parameters/CreditAssessmentId"
+      responses:
+        "200":
+          description: Credit assessment detail.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreditAssessmentEnvelope"
+  /ops/transfers/{transferRequestId}:
+    get:
+      tags: [Ops]
+      operationId: getOpsTransfer
+      parameters:
+        - $ref: "#/components/parameters/TransferRequestId"
+      responses:
+        "200":
+          description: Privileged transfer detail.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransferDetailEnvelope"
+  /ops/transfers/{transferRequestId}/external-events:
+    get:
+      tags: [Ops]
+      operationId: getTransferExternalEvents
+      parameters:
+        - $ref: "#/components/parameters/TransferRequestId"
+      responses:
+        "200":
+          description: External rail event history.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExternalEventListEnvelope"
+  /ops/transfers/{transferRequestId}/redrive:
+    post:
+      tags: [Ops]
+      operationId: redriveTransfer
+      parameters:
+        - $ref: "#/components/parameters/TransferRequestId"
+      responses:
+        "202":
+          description: Transfer re-drive accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcceptedOperationEnvelope"
+  /ops/transfers/{transferRequestId}/reconcile:
+    post:
+      tags: [Ops]
+      operationId: reconcileTransfer
+      parameters:
+        - $ref: "#/components/parameters/TransferRequestId"
+      responses:
+        "200":
+          description: Transfer reconciled.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransferDetailEnvelope"
+  /ops/audit-events:
+    get:
+      tags: [Ops]
+      operationId: searchAuditEvents
+      parameters:
+        - in: query
+          name: resourceType
+          schema:
+            type: string
+        - in: query
+          name: resourceId
+          schema:
+            type: string
+        - in: query
+          name: correlationId
+          schema:
+            type: string
+        - in: query
+          name: idempotencyKey
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        "200":
+          description: Audit search results.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditEventListEnvelope"
+  /ops/credit-assessments/{creditAssessmentId}/approve:
+    post:
+      tags: [Ops]
+      operationId: approveCreditAssessment
+      parameters:
+        - $ref: "#/components/parameters/CreditAssessmentId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewCreditAssessmentRequest"
+      responses:
+        "200":
+          description: Assessment approved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreditAssessmentEnvelope"
+  /ops/credit-assessments/{creditAssessmentId}/reject:
+    post:
+      tags: [Ops]
+      operationId: rejectCreditAssessment
+      parameters:
+        - $ref: "#/components/parameters/CreditAssessmentId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewCreditAssessmentRequest"
+      responses:
+        "200":
+          description: Assessment rejected.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreditAssessmentEnvelope"
+  /batch-runs/{batchRunId}:
+    get:
+      tags: [Batch]
+      operationId: getBatchRun
+      parameters:
+        - $ref: "#/components/parameters/BatchRunId"
+      responses:
+        "200":
+          description: Batch run detail.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchRunEnvelope"
+  /ops/batch-runs/{batchRunId}/retry:
+    post:
+      tags: [Ops]
+      operationId: retryBatchRun
+      parameters:
+        - $ref: "#/components/parameters/BatchRunId"
+      responses:
+        "200":
+          description: Batch retry accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchRetryEnvelope"
+  /integrations/external-rails/{provider}/events:
+    post:
+      tags: [Integrations]
+      operationId: ingestExternalRailEvent
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: X-External-Rail-Secret
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "202":
+          description: Event accepted and normalized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransferDetailEnvelope"
+components:
+  parameters:
+    AccountId:
+      in: path
+      name: accountId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    TransferRequestId:
+      in: path
+      name: transferRequestId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CreditAssessmentId:
+      in: path
+      name: creditAssessmentId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    BatchRunId:
+      in: path
+      name: batchRunId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: true
+      schema:
+        type: string
+    CorrelationId:
+      in: header
+      name: X-Correlation-Id
+      required: false
+      schema:
+        type: string
+  responses:
+    ErrorResponse:
+      description: Standard API error.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+  schemas:
+    StatusEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            status:
+              type: string
+          required: [status]
+      required: [data]
+    ErrorEnvelope:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+                required: [field, message]
+          required: [code, message]
+      required: [error]
+    Money:
+      type: object
+      properties:
+        currency:
+          type: string
+        minorUnits:
+          type: integer
+          format: int64
+      required: [currency, minorUnits]
+    PasswordLoginRequest:
+      type: object
+      properties:
+        grantType:
+          type: string
+          const: password
+        audience:
+          type: string
+        loginId:
+          type: string
+        secret:
+          type: string
+      required: [grantType, audience, loginId, secret]
+    TokenExchangeRequest:
+      type: object
+      properties:
+        grantType:
+          type: string
+          const: token-exchange
+        audience:
+          type: string
+        subjectToken:
+          type: string
+      required: [grantType, audience, subjectToken]
+    RefreshRequest:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+      required: [refreshToken]
+    LogoutRequest:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+      required: [refreshToken]
+    AuthPrincipal:
+      type: object
+      properties:
+        principalId:
+          type: string
+          format: uuid
+        actorId:
+          type: string
+        actorType:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+        audience:
+          type: string
+      required: [principalId, actorId, actorType, roles, audience]
+    AuthTokenEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            accessToken:
+              type: string
+            refreshToken:
+              type: string
+            tokenType:
+              type: string
+            expiresInSeconds:
+              type: integer
+            principal:
+              $ref: "#/components/schemas/AuthPrincipal"
+          required: [accessToken, refreshToken, tokenType, expiresInSeconds, principal]
+      required: [data]
+    LogoutEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            loggedOut:
+              type: boolean
+          required: [loggedOut]
+      required: [data]
+    AccountBalanceEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            accountId:
+              type: string
+              format: uuid
+            amount:
+              $ref: "#/components/schemas/Money"
+          required: [accountId, amount]
+      required: [data]
+    LedgerEntry:
+      type: object
+      properties:
+        journalEntryId:
+          type: string
+          format: uuid
+        postingId:
+          type: string
+          format: uuid
+        effectiveAt:
+          type: string
+          format: date-time
+        direction:
+          type: string
+        amount:
+          $ref: "#/components/schemas/Money"
+        runningBalance:
+          $ref: "#/components/schemas/Money"
+      required: [journalEntryId, postingId, effectiveAt, direction, amount, runningBalance]
+    LedgerEntryListEnvelope:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/LedgerEntry"
+        meta:
+          type: object
+          properties:
+            nextCursor:
+              type: string
+              nullable: true
+      required: [data]
+    InternalDestination:
+      type: object
+      properties:
+        type:
+          type: string
+          const: INTERNAL_ACCOUNT
+        accountId:
+          type: string
+          format: uuid
+      required: [type, accountId]
+    ExternalDestination:
+      type: object
+      properties:
+        type:
+          type: string
+          const: EXTERNAL_BANK
+        provider:
+          type: string
+        bankCode:
+          type: string
+        accountNumber:
+          type: string
+        accountName:
+          type: string
+      required: [type, bankCode, accountNumber, accountName]
+    CreateTransferRequest:
+      type: object
+      properties:
+        sourceAccountId:
+          type: string
+          format: uuid
+        destination:
+          oneOf:
+            - $ref: "#/components/schemas/InternalDestination"
+            - $ref: "#/components/schemas/ExternalDestination"
+        amount:
+          $ref: "#/components/schemas/Money"
+        purpose:
+          type: string
+      required: [sourceAccountId, destination, amount]
+    TransferMutationEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            transferRequestId:
+              type: string
+              format: uuid
+            status:
+              type: string
+            correlationId:
+              type: string
+          required: [transferRequestId, status, correlationId]
+      required: [data]
+    TransferDetailEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            transferRequestId:
+              type: string
+              format: uuid
+            status:
+              type: string
+            amount:
+              $ref: "#/components/schemas/Money"
+            sourceAccountId:
+              type: string
+              format: uuid
+            destination:
+              oneOf:
+                - $ref: "#/components/schemas/InternalDestination"
+                - $ref: "#/components/schemas/ExternalDestination"
+            externalReference:
+              type: string
+              nullable: true
+            externalRailProvider:
+              type: string
+              nullable: true
+            failureReason:
+              type: string
+              nullable: true
+            createdAt:
+              type: string
+              format: date-time
+            settledAt:
+              type: string
+              format: date-time
+              nullable: true
+          required: [transferRequestId, status, amount, sourceAccountId, destination, createdAt]
+      required: [data]
+    CreateCreditAssessmentRequest:
+      type: object
+      properties:
+        customerId:
+          type: string
+          format: uuid
+        requestedBy:
+          type: string
+      required: [customerId, requestedBy]
+    CreditAssessmentEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            creditAssessmentId:
+              type: string
+              format: uuid
+            status:
+              type: string
+            score:
+              type: integer
+              nullable: true
+            rationaleSummary:
+              type: string
+              nullable: true
+          required: [creditAssessmentId, status]
+      required: [data]
+    ReviewCreditAssessmentRequest:
+      type: object
+      properties:
+        rationale:
+          type: string
+      required: [rationale]
+    BatchRunEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            batchRunId:
+              type: string
+              format: uuid
+            batchType:
+              type: string
+            status:
+              type: string
+            scheduledFor:
+              type: string
+              format: date-time
+            startedAt:
+              type: string
+              format: date-time
+              nullable: true
+            completedAt:
+              type: string
+              format: date-time
+              nullable: true
+            processedCount:
+              type: integer
+            successCount:
+              type: integer
+            failureCount:
+              type: integer
+            failureSummary:
+              type: object
+              nullable: true
+              additionalProperties: true
+          required: [batchRunId, batchType, status, scheduledFor, processedCount, successCount, failureCount]
+      required: [data]
+    BatchRetryEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            retriedCount:
+              type: integer
+          required: [retriedCount]
+      required: [data]
+    ExternalEvent:
+      type: object
+      properties:
+        provider:
+          type: string
+        providerEventId:
+          type: string
+          nullable: true
+        eventType:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+        processedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [provider, eventType, payload, createdAt]
+    ExternalEventListEnvelope:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExternalEvent"
+      required: [data]
+    AuditEvent:
+      type: object
+      properties:
+        auditEventId:
+          type: string
+          format: uuid
+        actorType:
+          type: string
+        actorId:
+          type: string
+          nullable: true
+        actionType:
+          type: string
+        resourceType:
+          type: string
+        resourceId:
+          type: string
+        correlationId:
+          type: string
+          nullable: true
+        idempotencyKey:
+          type: string
+          nullable: true
+        occurredAt:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          additionalProperties: true
+      required: [auditEventId, actorType, actionType, resourceType, resourceId, occurredAt, metadata]
+    AuditEventListEnvelope:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditEvent"
+      required: [data]
+    AcceptedOperationEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            accepted:
+              type: boolean
+            transferRequestId:
+              type: string
+              format: uuid
+          required: [accepted, transferRequestId]
+      required: [data]
