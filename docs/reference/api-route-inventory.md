@@ -3,6 +3,8 @@
 **Global prefix:** `/api/v1`
 **Swagger UI:** `/docs`
 
+**Scope:** This inventory covers the Nest/Fastify API plus Next.js proxy routes. The Java skeleton under `apps/api-java` also exposes health endpoints at `/api/v1/health/live` and `/api/v1/health/ready`.
+
 | Group | Routes | Source |
 |---|---|---|
 | Health | `GET /api/v1/health/live`, `GET /api/v1/health/ready` | `src/modules/health/health.controller.ts` |

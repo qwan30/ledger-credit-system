@@ -5,6 +5,8 @@
 **Git commit used for scan:** `36fefb7`
 **Documentation status:** Source-backed refresh in progress
 
+**Scan scope note:** GitNexus was run against source baseline commit `36fefb7`; documentation-only commits after that can make the current GitNexus status stale until rerun.
+
 ## GitNexus Index
 
 | Metric | Value |
