@@ -1,0 +1,30 @@
+# Engineering Metrics
+
+**Measured on:** 2026-06-16
+
+| Metric | Value | Evidence |
+|---|---:|---|
+| GitNexus files | 219 | `npx.cmd gitnexus list` |
+| GitNexus nodes | 1,273 | `npx.cmd gitnexus list` |
+| GitNexus edges | 3,026 | `npx.cmd gitnexus list` |
+| GitNexus flows | 78 | `npx.cmd gitnexus list` |
+| Nest controller route methods | 24 | `rg "^@Controller|@(Get|Post|Put|Patch|Delete)\(" src ...` |
+| GitNexus route nodes | 26 | `mcp__gitnexus.route_map` |
+| Prisma models | 21 | `prisma/schema.prisma` |
+| Prisma enums | 15 | `prisma/schema.prisma` |
+| Prisma migrations | 5 | `prisma/migrations/*/migration.sql` |
+| TS test/spec files | 34 | `rg --files -g "*.test.ts" -g "*.spec.ts"` |
+| GitHub Actions workflows | 1 | `.github/workflows/ci.yml` |
+| CI jobs | 4 | `.github/workflows/ci.yml` |
+
+## Verification Commands
+
+Use these commands before updating any metric:
+
+```powershell
+npx.cmd gitnexus analyze --index-only --name ledger-credit-system .
+npx.cmd gitnexus status
+npx.cmd gitnexus list
+rg -n "^@Controller|@(Get|Post|Put|Patch|Delete)\(" src apps/api-java/src/main/java -g "*.ts" -g "*.java"
+rg --files -g "*.test.ts" -g "*.spec.ts" src tests apps/web/src
+```
