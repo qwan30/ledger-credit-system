@@ -1,4 +1,4 @@
-# Data Model
+﻿# Data Model
 
 **Last Updated:** 2026-03-15
 
@@ -184,7 +184,7 @@ Important fields:
 - batch run status
 - account status
 
-These are described canonically in `docs/state-machine.md`.
+These are described canonically in `state-machine.md`.
 
 ## Target-Only Placeholders
 

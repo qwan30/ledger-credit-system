@@ -1,4 +1,4 @@
-# Project Overview
+﻿# Project Overview
 
 **Last Updated:** 2026-03-16
 
@@ -49,10 +49,10 @@ Primary target capabilities:
 
 The source brief has been decomposed into canonical docs:
 
-- ledger and transfer requirements -> `docs/business-rules.md`, `docs/core-business-flows.md`, `docs/state-machine.md`
-- credit-scoring intent -> `docs/actors.md`, `docs/core-business-flows.md`, `docs/api-contract.md`
-- data integrity and audit expectations -> `docs/data-model.md`, `docs/non-functional-requirements.md`, `docs/configuration-rules.md`
-- batch and automation intent -> `docs/automation-tasks.md`, `docs/non-functional-requirements.md`
+- ledger and transfer requirements -> `business-rules.md`, `core-business-flows.md`, `state-machine.md`
+- credit-scoring intent -> `actors.md`, `core-business-flows.md`, `api-contract.md`
+- data integrity and audit expectations -> `data-model.md`, `non-functional-requirements.md`, `configuration-rules.md`
+- batch and automation intent -> `automation-tasks.md`, `non-functional-requirements.md`
 
 ## Current Completion Snapshot
 
@@ -69,16 +69,16 @@ Operational follow-ups that remain outside the canonical target set:
 
 ## Recommended Reading Order
 
-1. `docs/system-map.md`
-2. `docs/retrieval-guide.md`
-3. `docs/actors.md`
-4. `docs/system-modules.md`
-5. `docs/core-business-flows.md`
-6. `docs/business-rules.md`
-7. `docs/data-model.md`
-8. `docs/state-machine.md`
-9. `docs/api-contract.md`
-10. `docs/non-functional-requirements.md`
-11. `docs/configuration-rules.md`
-12. `docs/automation-tasks.md`
-13. `docs/ui-roles.md`
+1. `system-map.md`
+2. `retrieval-guide.md`
+3. `actors.md`
+4. `system-modules.md`
+5. `core-business-flows.md`
+6. `business-rules.md`
+7. `data-model.md`
+8. `state-machine.md`
+9. `api-contract.md`
+10. `non-functional-requirements.md`
+11. `configuration-rules.md`
+12. `automation-tasks.md`
+13. `ui-roles.md`

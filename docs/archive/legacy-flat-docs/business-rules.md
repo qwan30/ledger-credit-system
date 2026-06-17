@@ -1,4 +1,4 @@
-# Business Rules
+﻿# Business Rules
 
 **Last Updated:** 2026-03-15
 

@@ -1,4 +1,4 @@
-# Core Business Flows
+﻿# Core Business Flows
 
 **Last Updated:** 2026-03-15
 
@@ -46,7 +46,7 @@
 
 ## Flow Coupling Notes
 
-- transfer flows depend on business rules in `docs/business-rules.md`
-- state transitions are defined in `docs/state-machine.md`
-- durable entities are defined in `docs/data-model.md`
-- public request and response expectations are defined in `docs/api-contract.md`
+- transfer flows depend on business rules in `business-rules.md`
+- state transitions are defined in `state-machine.md`
+- durable entities are defined in `data-model.md`
+- public request and response expectations are defined in `api-contract.md`

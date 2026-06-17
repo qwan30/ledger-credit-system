@@ -1,4 +1,4 @@
-# Automation Tasks
+﻿# Automation Tasks
 
 **Last Updated:** 2026-03-15
 

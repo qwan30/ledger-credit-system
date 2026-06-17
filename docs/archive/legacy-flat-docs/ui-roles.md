@@ -1,4 +1,4 @@
-# UI Roles
+﻿# UI Roles
 
 **Last Updated:** 2026-03-15
 

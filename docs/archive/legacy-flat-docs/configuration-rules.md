@@ -1,4 +1,4 @@
-# Configuration Rules
+﻿# Configuration Rules
 
 **Last Updated:** 2026-03-15
 

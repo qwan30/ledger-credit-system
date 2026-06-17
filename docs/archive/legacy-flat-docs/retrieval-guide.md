@@ -1,4 +1,4 @@
-# Retrieval Guide
+﻿# Retrieval Guide
 
 **Last Updated:** 2026-03-15
 
@@ -6,19 +6,19 @@
 
 For broad project work:
 
-1. `docs/project-overview.md`
-2. `docs/system-map.md`
-3. `docs/business-rules.md`
+1. `project-overview.md`
+2. `system-map.md`
+3. `business-rules.md`
 
 ## If You Are Working On Transfers
 
 Read in this order:
 
-1. `docs/core-business-flows.md`
-2. `docs/state-machine.md`
-3. `docs/api-contract.md`
-4. `docs/data-model.md`
-5. `docs/non-functional-requirements.md`
+1. `core-business-flows.md`
+2. `state-machine.md`
+3. `api-contract.md`
+4. `data-model.md`
+5. `non-functional-requirements.md`
 
 Focus on:
 
@@ -30,10 +30,10 @@ Focus on:
 
 Read in this order:
 
-1. `docs/business-rules.md`
-2. `docs/data-model.md`
-3. `docs/system-modules.md`
-4. `docs/non-functional-requirements.md`
+1. `business-rules.md`
+2. `data-model.md`
+3. `system-modules.md`
+4. `non-functional-requirements.md`
 
 Focus on:
 
@@ -45,11 +45,11 @@ Focus on:
 
 Read in this order:
 
-1. `docs/actors.md`
-2. `docs/core-business-flows.md`
-3. `docs/data-model.md`
-4. `docs/api-contract.md`
-5. `docs/configuration-rules.md`
+1. `actors.md`
+2. `core-business-flows.md`
+3. `data-model.md`
+4. `api-contract.md`
+5. `configuration-rules.md`
 
 Focus on:
 
@@ -61,11 +61,11 @@ Focus on:
 
 Read in this order:
 
-1. `docs/automation-tasks.md`
-2. `docs/core-business-flows.md`
-3. `docs/state-machine.md`
-4. `docs/non-functional-requirements.md`
-5. `docs/configuration-rules.md`
+1. `automation-tasks.md`
+2. `core-business-flows.md`
+3. `state-machine.md`
+4. `non-functional-requirements.md`
+5. `configuration-rules.md`
 
 Focus on:
 
@@ -77,11 +77,11 @@ Focus on:
 
 Read in this order:
 
-1. `docs/business-rules.md`
-2. `docs/api-contract.md`
-3. `docs/data-model.md`
-4. `docs/non-functional-requirements.md`
-5. `docs/ui-roles.md`
+1. `business-rules.md`
+2. `api-contract.md`
+3. `data-model.md`
+4. `non-functional-requirements.md`
+5. `ui-roles.md`
 
 Focus on:
 
@@ -94,6 +94,6 @@ Focus on:
 Read:
 
 1. `docs/01_ideation/2026-03-15-initial-requirement-brief.md`
-2. `docs/project-overview.md`
+2. `project-overview.md`
 
 Use the ideation brief as source context only. Do not treat it as the canonical requirements document.

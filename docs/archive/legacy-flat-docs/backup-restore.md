@@ -1,4 +1,4 @@
-# Backup and Restore Runbook
+﻿# Backup and Restore Runbook
 
 This runbook focuses on protecting the append-only ledger and supporting stores. The primary datastore is PostgreSQL, so leverage its native tooling alongside secure object storage.
 

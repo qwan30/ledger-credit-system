@@ -1,4 +1,4 @@
-# Disaster Recovery Runbook
+﻿# Disaster Recovery Runbook
 
 This runbook covers catastrophic failures such as region-wide outages or corrupted databases. It complements the backup/restore plan by focusing on recovery coordination, traffic cutover, and communication.
 
@@ -14,7 +14,7 @@ This runbook covers catastrophic failures such as region-wide outages or corrupt
 2. **Assess scope**: Confirm whether only the service is down (app) or the Postgres cluster is compromised.
 3. **Failover preparation**:
    - If Postgres is healthy but app pods are unstable, rebuild the image locally and redeploy using the `app-deployment.yaml` template.
-   - If DB is compromised, follow `docs/backup-restore.md` restore steps into a new cluster (target region or availability zone).
+   - If DB is compromised, follow `backup-restore.md` restore steps into a new cluster (target region or availability zone).
 4. **Infrastructure bring-up**:
    - Create the new namespace/cluster if needed.
    - Apply `deploy/templates/configmap.yaml` and `secret-template.yaml` with the target environment values.

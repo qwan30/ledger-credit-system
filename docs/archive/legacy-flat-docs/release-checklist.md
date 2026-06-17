@@ -1,4 +1,4 @@
-# Release Checklist
+﻿# Release Checklist
 
 Follow this checklist before tagging or deploying a release build to production.
 
@@ -13,10 +13,10 @@ Follow this checklist before tagging or deploying a release build to production.
    - Validate the image starts with `node dist/src/main.js` and responds to `/api/v1/health/live` and `/api/v1/health/ready`.
 
 3. **Documentation & Runbooks**
-   - Update `docs/deployment-environment.md` and `docs/runtime-operations.md` if runtime contracts changed.
+   - Update `deployment-environment.md` and `runtime-operations.md` if runtime contracts changed.
    - Document any new environment variables, secrets, or database requirements in the same docs.
-   - Review `docs/backup-restore.md` and `docs/disaster-recovery.md` for required adjustments.
-   - Confirm `docs/release-checklist.md` mirrors the newly executed release steps.
+   - Review `backup-restore.md` and `disaster-recovery.md` for required adjustments.
+   - Confirm `release-checklist.md` mirrors the newly executed release steps.
 
 4. **Deployment Artifacts**
    - Update `deploy/templates/*` with the new image tag, resource hints, or configuration.
