@@ -2,18 +2,18 @@
 
 **Status date:** 2026-06-17
 **Repository:** `D:\projects\ledger-credit-system`
-**Git commit used for scan:** `c3e283f`
+**Git commit used for scan:** final verification scan; confirm current value with `npx.cmd gitnexus status`
 **Documentation status:** Source-backed refresh implemented with known verification blockers
 
-**Scan scope note:** GitNexus was refreshed after the documentation hierarchy and archive commits. Run `npx.cmd gitnexus status` before relying on the metrics.
+**Scan scope note:** GitNexus was refreshed during final verification. Run `npx.cmd gitnexus status` before relying on the metrics after any file change.
 
 ## GitNexus Index
 
 | Metric | Value |
 |---|---:|
 | Files | 277 |
-| Symbols/nodes | 1,580 |
-| Edges | 3,480 |
+| Symbols/nodes | 1,583 |
+| Edges | 3,483 |
 | Clusters | 58 |
 | Execution flows | 95 |
 

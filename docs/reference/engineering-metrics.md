@@ -5,8 +5,8 @@
 | Metric | Value | Evidence |
 |---|---:|---|
 | GitNexus files | 277 | `npx.cmd gitnexus list` |
-| GitNexus nodes | 1,580 | `npx.cmd gitnexus list` |
-| GitNexus edges | 3,480 | `npx.cmd gitnexus list` |
+| GitNexus nodes | 1,583 | `npx.cmd gitnexus list` |
+| GitNexus edges | 3,483 | `npx.cmd gitnexus list` |
 | GitNexus flows | 95 | `npx.cmd gitnexus list` |
 | Nest controller route methods | 24 | `rg -n "@(Get|Post|Put|Patch|Delete)\(" src -g "*.ts"` |
 | GitNexus route nodes | 26 | `mcp__gitnexus.route_map` |

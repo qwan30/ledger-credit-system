@@ -2,15 +2,15 @@
 
 **Scan date:** 2026-06-17
 **Repository alias:** `ledger-credit-system`
-**Indexed commit:** `c3e283f`
+**Indexed commit:** final verification scan; confirm current value with `npx.cmd gitnexus status`
 
 ## Graph Summary
 
 | Metric | Value |
 |---|---:|
 | Files | 277 |
-| Nodes | 1,580 |
-| Edges | 3,480 |
+| Nodes | 1,583 |
+| Edges | 3,483 |
 | Clusters | 58 |
 | Flows | 95 |
 

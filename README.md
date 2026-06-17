@@ -80,8 +80,8 @@ flowchart LR
 | Metric | Value | Evidence |
 |---|---:|---|
 | GitNexus files | 277 | [`engineering-metrics.md`](docs/reference/engineering-metrics.md) |
-| GitNexus nodes | 1,580 | [`engineering-metrics.md`](docs/reference/engineering-metrics.md) |
-| GitNexus edges | 3,480 | [`engineering-metrics.md`](docs/reference/engineering-metrics.md) |
+| GitNexus nodes | 1,583 | [`engineering-metrics.md`](docs/reference/engineering-metrics.md) |
+| GitNexus edges | 3,483 | [`engineering-metrics.md`](docs/reference/engineering-metrics.md) |
 | GitNexus flows | 95 | [`engineering-metrics.md`](docs/reference/engineering-metrics.md) |
 | Nest route methods | 24 | [`api-route-inventory.md`](docs/reference/api-route-inventory.md) |
 | Prisma models | 21 | [`db-schema.md`](docs/06-database/db-schema.md) |
