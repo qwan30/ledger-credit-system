@@ -1,13 +1,13 @@
 # Engineering Metrics
 
-**Measured on:** 2026-06-16
+**Measured on:** 2026-06-17
 
 | Metric | Value | Evidence |
 |---|---:|---|
-| GitNexus files | 219 | `npx.cmd gitnexus list` |
-| GitNexus nodes | 1,273 | `npx.cmd gitnexus list` |
-| GitNexus edges | 3,026 | `npx.cmd gitnexus list` |
-| GitNexus flows | 78 | `npx.cmd gitnexus list` |
+| GitNexus files | 277 | `npx.cmd gitnexus list` |
+| GitNexus nodes | 1,580 | `npx.cmd gitnexus list` |
+| GitNexus edges | 3,480 | `npx.cmd gitnexus list` |
+| GitNexus flows | 95 | `npx.cmd gitnexus list` |
 | Nest controller route methods | 24 | `rg -n "@(Get|Post|Put|Patch|Delete)\(" src -g "*.ts"` |
 | GitNexus route nodes | 26 | `mcp__gitnexus.route_map` |
 | Prisma models | 21 | `prisma/schema.prisma` |

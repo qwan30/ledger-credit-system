@@ -21,7 +21,7 @@ The repository now contains a working TypeScript backend foundation for the ledg
 
 ## Important Implementation Notes
 
-- the external rail surface is provider-agnostic and currently ships `simulator` and `mock-bank` adapters; real bank onboarding remains an operational follow-up rather than a code-gap
+- the external rail surface is provider-agnostic and currently ships `simulator` and `mock-bank` adapters; production bank onboarding remains an operational follow-up rather than a code-gap
 - internal JWT token issuance, refresh rotation, logout, OIDC token-exchange flows, and audited admin provisioning endpoints are implemented
 - balance is served from `balance_projection`, while ledger and audit remain append-only write sources
 - finance-specific SQL guards are applied via follow-up migrations that enforce positive posting/transfer amounts, block updates/deletes on append-only tables, and safely stage enum backfills across separate migrations

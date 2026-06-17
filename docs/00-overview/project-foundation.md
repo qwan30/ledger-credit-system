@@ -11,7 +11,7 @@ This repository is not a hospital-domain ERP. The documentation style is borrowe
 | Fact | Verified value | Evidence |
 |---|---:|---|
 | GitNexus alias | `ledger-credit-system` | `npx.cmd gitnexus analyze --index-only --name ledger-credit-system .` |
-| GitNexus graph | 219 files, 1,273 nodes, 3,026 edges, 58 clusters, 78 flows | `docs/reference/engineering-metrics.md` |
+| GitNexus graph | 277 files, 1,580 nodes, 3,480 edges, 58 clusters, 95 flows | `docs/reference/engineering-metrics.md` |
 | Nest controller route methods | 24 | `rg -n "@(Get|Post|Put|Patch|Delete)\(" src -g "*.ts"` |
 | GitNexus route nodes | 26 | GitNexus route map |
 | Global API prefix | `/api/v1` | `src/bootstrap.ts` |

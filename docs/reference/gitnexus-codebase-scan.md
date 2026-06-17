@@ -1,18 +1,18 @@
 # GitNexus Codebase Scan
 
-**Scan date:** 2026-06-16
+**Scan date:** 2026-06-17
 **Repository alias:** `ledger-credit-system`
-**Indexed commit:** `36fefb7`
+**Indexed commit:** `c3e283f`
 
 ## Graph Summary
 
 | Metric | Value |
 |---|---:|
-| Files | 219 |
-| Nodes | 1,273 |
-| Edges | 3,026 |
+| Files | 277 |
+| Nodes | 1,580 |
+| Edges | 3,480 |
 | Clusters | 58 |
-| Flows | 78 |
+| Flows | 95 |
 
 ## Main Execution Flows
 

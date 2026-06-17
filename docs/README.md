@@ -170,6 +170,6 @@ Referenced by: root `README.md`, `AGENTS.md`, and all documentation consumers.
 
 - Update this index whenever documents are added, moved, or removed.
 - Keep all paths relative to the `docs/` directory unless linking to root files.
-- Do not claim production readiness, real bank settlement, Prometheus/Grafana observability, or deployment status unless fresh evidence proves it.
+- Do not claim production readiness, production bank settlement, metrics dashboard observability, or deployment status unless fresh evidence proves it.
 - Rerun GitNexus before refreshing source metrics.
 - Move superseded docs to `archive/` instead of deleting them.

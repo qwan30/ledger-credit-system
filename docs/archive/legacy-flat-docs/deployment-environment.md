@@ -1,4 +1,4 @@
-﻿# Deployment Environment
+# Deployment Environment
 
 ## Overview
 
@@ -30,7 +30,7 @@ This NestJS backend is designed to run as a long-lived stateless service that ta
 | `INTEREST_RATE_BPS` | Overnight interest rate in basis points | Used for accrual processes. |
 | `AUTH_*` | Authentication metadata (ISSUER/AUDIENCE/TTL) | `AUTH_ACCESS_TTL_SECONDS`, `AUTH_REFRESH_TTL_SECONDS`, `AUTH_INTERNAL_ISSUER`, `AUTH_CUSTOMER_AUDIENCE`, `AUTH_OPERATOR_AUDIENCE`, `AUTH_OIDC_*` |
 
-Keep sensitive variables in a secrets manager and reference them through mounted secrets or environment providers (Kubernetes Secret, Vault agent, AWS Parameter Store, etc.). Non-sensitive configuration belongs in config maps or static JSON.
+Keep sensitive variables in a secrets manager and reference them through mounted secrets or environment providers (orchestrator secret, Vault agent, AWS Parameter Store, etc.). Non-sensitive configuration belongs in config maps or static JSON.
 
 ## Infrastructure Notes
 

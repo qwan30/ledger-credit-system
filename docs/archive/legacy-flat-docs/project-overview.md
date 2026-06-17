@@ -1,4 +1,4 @@
-﻿# Project Overview
+# Project Overview
 
 **Last Updated:** 2026-03-16
 
@@ -65,7 +65,7 @@ The repository now implements the current canonical target set, including:
 
 Operational follow-ups that remain outside the canonical target set:
 
-- onboarding real bank or scheme-specific rail adapters and signature policies
+- onboarding production bank or scheme-specific rail adapters and signature policies
 
 ## Recommended Reading Order
 
