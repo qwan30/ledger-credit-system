@@ -34,5 +34,5 @@
 
 - No live production deployment evidence is present in this repository.
 - External bank integration is represented by simulator and mock-bank adapters only.
-- Observability is currently structured logging plus correlation IDs; do not document Prometheus/Grafana as implemented unless code is added later.
+- Observability is currently structured logging plus correlation IDs; do not document a metrics dashboard stack as implemented unless code is added later.
 - The root `Dockerfile` uses Node 20 while CI uses Node 22; document this as a compatibility note rather than silently hiding it.
