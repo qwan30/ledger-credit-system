@@ -27,7 +27,7 @@ Mục tiêu: Xây dựng hệ thống tài chính với độ chính xác tuyệ
 •	Security & Audit Log: Ghi log mọi thao tác nhạy cảm (Ai xem số dư, ai duyệt vay). Mã hóa dữ liệu nhạy cảm (Encryption).
 •	Unit Testing: Coverage cực cao (>80%) cho các logic tính toán tiền tệ.
 4. Tech Stack & Tools
-•	Backend: Java 17/21, Spring Boot, Spring Batch, Spring Data JPA.
+•	Backend: Java 21, Spring Boot, Spring Batch, Spring Data JPA.
 •	Database: PostgreSQL (Highly reliable for financial data).
 •	Testing: JUnit 5, Mockito.
 •	Rule Engine: Drools hoặc code logic thuần (Java) để chấm điểm tín dụng.

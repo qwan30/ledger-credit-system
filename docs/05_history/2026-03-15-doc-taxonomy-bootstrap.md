@@ -1,4 +1,4 @@
-# Doc Taxonomy Bootstrap
+﻿# Doc Taxonomy Bootstrap
 
 **Date:** 2026-03-15
 
@@ -14,6 +14,6 @@ The repository's single `requirement.md` brief was decomposed into a canonical d
 
 ## What Future Sessions Should Do
 
-- start from `docs/00_index.md` and `docs/project-overview.md`
+- start from `docs/00_index.md` and `docs/00-overview/project-foundation.md`
 - treat the ideation brief as historical source context only
 - update the canonical top-level docs when requirements evolve
